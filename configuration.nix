@@ -21,6 +21,7 @@
     ./modules/services.nix          # 🛠️ Services
     ./modules/containers.nix        # 📦 Container opsætning
     ./modules/garbage-upgrade.nix   # ♻️ Automatic Garbage Collection & System Upgrade
+    ./modules/ollama.nix
   ];
 
   # -----------------------------------------------------------------------------

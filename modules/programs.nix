@@ -24,13 +24,23 @@
   # -----------------------------------------------------------------------------
   environment.systemPackages = with pkgs; [
     wget                 # 🌐 download tool
-    #git                     # 🔧 version control
+    git                     # 🔧 version control
+    gparted
+    parted
+    e2fsprogs
     htop                 # 📊 system monitor
     neovim            # ✏️ terminal editor
     ripgrep            # 🔍 file search
     vlc                    # 🎬 media player
     pipewire         # 🎧 audio server
+    #vscode   # official Microsoft VS Code
+    # or
+    vscodium # open-source build
+
+
+
   ];
+
 
   # -----------------------------------------------------------------------------
   # 🔊 Services
