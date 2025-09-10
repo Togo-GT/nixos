@@ -1,6 +1,6 @@
 {
   description = "NixOS config for nixos-btw with Home Manager ✨";
-
+ 
   inputs = {
     # 📦 NixOS officielle kanaler
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
