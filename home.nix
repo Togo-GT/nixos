@@ -156,8 +156,6 @@ in
     userSettings = {
       "editor.fontSize" = 14;
       "window.zoomLevel" = 1;
-      "workbench.colorTheme" =  "Visual Studio Dark";
-
     };
     extensions = [
       pkgs.vscode-extensions.ms-python.python
@@ -165,7 +163,6 @@ in
       pkgs.vscode-extensions.vscodevim.vim
       pkgs.vscode-extensions.ms-toolsai.jupyter
     ];
-
   };
 
   # ----------------------------
@@ -218,3 +215,4 @@ in
     MANPAGER = "less";
   };
 }
+#GT-nixos-btw
