@@ -1,6 +1,9 @@
 { pkgs, ... }:
 
 let
+  # ----------------------------
+  # Shell aliases
+  # ----------------------------
   commonAliases = {
     ll    = "ls -la";
     gs    = "git status";
@@ -13,11 +16,29 @@ let
     rg    = "ripgrep";
     htop  = "htop";
     tree  = "tree";
+    duf   = "duf";
+    bottom = "btm";
   };
 
+  # ----------------------------
+  # CLI Packages
+  # ----------------------------
   cliPackages = with pkgs; [
-    delta lazygit htop curl gparted e2fsprogs ripgrep fzf fd bat jq ncdu tree neofetch
+    # Dev tools
+    delta lazygit curl ripgrep fzf fd bat jq
+
+    # System monitoring
+    htop bottom duf ncdu tree neofetch
+
+    # Disk utilities
+    gparted e2fsprogs
+
+    # Shell enhancements
     autojump zsh-autosuggestions zsh-syntax-highlighting
+    zoxide eza tldr
+
+    # Editors
+    nano neovim
   ];
 in
 {
@@ -26,14 +47,26 @@ in
   home.stateVersion = "25.05";
 
   # ----------------------------
-  # 🐚 Zsh Configuration
+  # Packages
+  # ----------------------------
+  home.packages = cliPackages;
+
+  # ----------------------------
+  # Zsh Configuration (Primary Shell)
   # ----------------------------
   programs.zsh = {
     enable = true;
     shellAliases = commonAliases;
     initExtra = ''
+      # Editor - nano som standard
       export EDITOR=nano
       export VISUAL=nano
+
+      # Bedre navigation
+      eval "$(zoxide init zsh)"
+      alias ls="eza --icons --group-directories-first"
+      alias l="eza --icons --group-directories-first -l"
+      alias la="eza --icons --group-directories-first -la"
 
       # Load plugins from Nix
       source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -62,20 +95,142 @@ in
         fi
       }
 
-      # Powerlevel10k right prompt
-      typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
-      [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+      # Powerlevel10k prompt hvis installeret
+      if [[ -f ~/.p10k.zsh ]]; then
+        source ~/.p10k.zsh
+        typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
+      fi
     '';
   };
 
   # ----------------------------
-  # Bash Configuration
+  # Bash Configuration (Backup)
   # ----------------------------
   programs.bash = {
     enable = true;
     shellAliases = commonAliases;
+    initExtra = ''
+      export EDITOR=nano
+      export VISUAL=nano
+      alias ls="eza --icons --group-directories-first"
+    '';
   };
 
-  # Resten af din konfiguration forbliver uændret...
-  # [Terminal, Editors, Git, Tmux osv.]
+  # ----------------------------
+  # Terminal emulator
+  # ----------------------------
+  programs.alacritty.enable = true;
+  home.file.".config/alacritty/alacritty.yml".text = ''
+    window:
+      padding:
+        x: 8
+        y: 8
+      dynamic_title: true
+    font:
+      normal:
+        family: "Monospace"
+        size: 12.0
+    scrolling:
+      history: 20000
+      multiplier: 3
+    cursor:
+      style: Block
+      blink: true
+    live_config_reload: true
+    colors:
+      primary:
+        background: '0x1d1f21'
+        foreground: '0xc5c8c6'
+      cursor:
+        text: '0x1d1f21'
+        cursor: '0xc5c8c6'
+  '';
+
+  # ----------------------------
+  # Neovim (Advanced Editor)
+  # ----------------------------
+  programs.neovim.enable = true;
+  home.file.".config/nvim/init.vim".text = ''
+    set number
+    syntax on
+    filetype plugin indent on
+    set tabstop=2
+    set shiftwidth=2
+    set expandtab
+    set clipboard=unnamedplus
+  '';
+
+  # ----------------------------
+  # VSCodium
+  # ----------------------------
+  programs.vscode = {
+    enable = true;
+    package = pkgs.vscodium;
+    extensions = with pkgs.vscode-extensions; [
+      ms-python.python
+      eamodio.gitlens
+      vscodevim.vim
+      ms-toolsai.jupyter
+    ];
+  };
+
+  # ----------------------------
+  # Git Configuration
+  # ----------------------------
+  programs.git.enable = true;
+  home.file.".gitconfig".text = ''
+    [user]
+      name = "Togo-GT"
+      email = "michael.kaare.nielsen@gmail.com"
+    [core]
+      editor = nano
+    [alias]
+      st = status
+      co = checkout
+      br = branch
+      cm = commit
+      lg = log --oneline --graph --decorate --all
+    [credential]
+      helper = cache --timeout=3600
+    [pull]
+      rebase = false
+    [init]
+      defaultBranch = main
+  '';
+
+  # ----------------------------
+  # Tmux Configuration
+  # ----------------------------
+  home.file.".tmux.conf".text = ''
+    set -g mouse on
+    setw -g mode-keys vi
+    bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+    set -g prefix C-a
+    unbind C-b
+    bind C-a send-prefix
+    set -g status-bg colour234
+    set -g status-fg colour136
+    set -g history-limit 10000
+    set -g renumber-windows on
+  '';
+
+  # ----------------------------
+  # Session variables
+  # ----------------------------
+  home.sessionVariables = {
+    LANG   = "en_US.UTF-8";
+    LC_ALL = "en_US.UTF-8";
+    PAGER  = "less";
+    MANPAGER = "less";
+  };
+
+  # ----------------------------
+  # DConf Settings (GNOME specific)
+  # ----------------------------
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+      enable-hot-corners = false;
+    };
+  };
 }
