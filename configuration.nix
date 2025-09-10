@@ -117,6 +117,7 @@
     neofetch    # 💻 System info
     tree        # 🌲 Mappeoversigt
     nil         # 🟢 Nix LSP server til editor
+    bash
   ];
 
   # ----------------------------
