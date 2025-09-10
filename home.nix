@@ -37,8 +37,9 @@ let
     autojump zsh-autosuggestions zsh-syntax-highlighting
     zoxide eza tldr
 
-    # Editors
-    nano neovim
+    # Editors - VÆLG KUN ÉN NEOVIM!
+    nano
+    # neovim  # Fjern kommentar hvis du vil bruge Neovim
   ];
 in
 {
@@ -57,7 +58,7 @@ in
   programs.zsh = {
     enable = true;
     shellAliases = commonAliases;
-    initExtra = ''
+    initContent = ''
       # Editor - nano som standard
       export EDITOR=nano
       export VISUAL=nano
@@ -147,30 +148,20 @@ in
   '';
 
   # ----------------------------
-  # Neovim (Advanced Editor)
-  # ----------------------------
-  programs.neovim.enable = true;
-  home.file.".config/nvim/init.vim".text = ''
-    set number
-    syntax on
-    filetype plugin indent on
-    set tabstop=2
-    set shiftwidth=2
-    set expandtab
-    set clipboard=unnamedplus
-  '';
-
-  # ----------------------------
-  # VSCodium
+  # VSCodium - NY STRUKTUR
   # ----------------------------
   programs.vscode = {
     enable = true;
     package = pkgs.vscodium;
-    extensions = with pkgs.vscode-extensions; [
-      ms-python.python
-      eamodio.gitlens
-      vscodevim.vim
-      ms-toolsai.jupyter
+    userSettings = {
+      "editor.fontSize" = 14;
+      "window.zoomLevel" = 1;
+    };
+    extensions = [
+      pkgs.vscode-extensions.ms-python.python
+      pkgs.vscode-extensions.eamodio.gitlens
+      pkgs.vscode-extensions.vscodevim.vim
+      pkgs.vscode-extensions.ms-toolsai.jupyter
     ];
   };
 
@@ -222,15 +213,5 @@ in
     LC_ALL = "en_US.UTF-8";
     PAGER  = "less";
     MANPAGER = "less";
-  };
-
-  # ----------------------------
-  # DConf Settings (GNOME specific)
-  # ----------------------------
-  dconf.settings = {
-    "org/gnome/desktop/interface" = {
-      color-scheme = "prefer-dark";
-      enable-hot-corners = false;
-    };
   };
 }
