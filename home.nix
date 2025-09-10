@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 let
   terminalAliases = {
@@ -28,64 +28,55 @@ in
   # ----------------------------
   # 🐚 Zsh
   # ----------------------------
-  programs.zsh = {
-    enable = true;
+programs.zsh.initContent = ''
+  # Aliases
+  alias ll="ls -lah"
+  alias gs="git status"
+  alias co="git checkout"
+  alias br="git branch"
+  alias cm="git commit"
+  alias lg="git log --oneline --graph --decorate --all"
+  alias fz="fzf"
+  alias rg="ripgrep"
+  alias htop="htop"
+  alias tree="tree"
+  alias nixup="sudo nixos-rebuild switch --upgrade --flake /home/gt/nixos#nixos-btw"
 
-    oh-my-zsh = {
-      enable = true;
-      theme = "powerlevel10k/powerlevel10k"; # korrekt sti
-      plugins = [ "git" "z" "sudo" ];        # øvrige plugins loades manuelt
-    };
+  export EDITOR=nano
+  export VISUAL=nano
 
-    initContent = ''
-      # Aliases
-      alias ll="ls -lah"
-      alias gs="git status"
-      alias co="git checkout"
-      alias br="git branch"
-      alias cm="git commit"
-      alias lg="git log --oneline --graph --decorate --all"
-      alias fz="fzf"
-      alias rg="ripgrep"
-      alias htop="htop"
-      alias tree="tree"
-      alias nixup="sudo nixos-rebuild switch --upgrade --flake /home/gt/nixos#nixos-btw"
+  # Load plugins from Nix
+  source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+  source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  source ${pkgs.autojump}/share/autojump/autojump.zsh
 
-      export EDITOR=nvim
-      export VISUAL=nvim
+  # Git Power Dashboard
+  function git_power_dashboard() {
+    local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+    if [[ -n $branch ]]; then
+      local ahead behind staged unstaged untracked
+      ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+      behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
+      staged=$(git diff --cached --name-only 2>/dev/null | wc -l)
+      unstaged=$(git diff --name-only 2>/dev/null | wc -l)
+      untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l)
 
-      # Load plugins fra Nix
-      source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-      source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-      source ${pkgs.autojump}/share/autojump/autojump.zsh
+      local out="" in="" s="" u="" t=""
+      [[ $ahead -gt 0 ]] && out="%F{green}↑$ahead%f"
+      [[ $behind -gt 0 ]] && in="%F{red}↓$behind%f"
+      [[ $staged -gt 0 ]] && s="%F{blue}+$staged%f"
+      [[ $unstaged -gt 0 ]] && u="%F{yellow}~$unstaged%f"
+      [[ $untracked -gt 0 ]] && t="%F{magenta}?$untracked%f"
 
-      # Git Power Dashboard
-      function git_power_dashboard() {
-        local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-        if [[ -n $branch ]]; then
-          local ahead behind staged unstaged untracked
-          ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
-          behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
-          staged=$(git diff --cached --name-only 2>/dev/null | wc -l)
-          unstaged=$(git diff --name-only 2>/dev/null | wc -l)
-          untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l)
+      echo "%F{cyan}$branch%f $out$in$s$u$t"
+    fi
+  }
 
-          local out="" in="" s="" u="" t=""
-          [[ $ahead -gt 0 ]] && out="%F{green}↑$ahead%f"
-          [[ $behind -gt 0 ]] && in="%F{red}↓$behind%f"
-          [[ $staged -gt 0 ]] && s="%F{blue}+$staged%f"
-          [[ $unstaged -gt 0 ]] && u="%F{yellow}~$unstaged%f"
-          [[ $untracked -gt 0 ]] && t="%F{magenta}?$untracked%f"
+  # Powerlevel10k right prompt
+  typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
+  [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+'';
 
-          echo "%F{cyan}$branch%f $out$in$s$u$t"
-        fi
-      }
-
-      # Powerlevel10k right prompt
-      typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
-      [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-    '';
-  };
 
   # ----------------------------
   # Bash aliaser
