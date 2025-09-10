@@ -137,15 +137,16 @@ in
   '';
 
   programs.vscode = {
-    enable = true;
-    package = pkgs.vscodium;
-    profiles.default.extensions = with pkgs.vscode-extensions; [
-      ms-python.python
-      eamodio.gitlens
-      vscodevim.vim
-      ms-toolsai.jupyter
-    ];
-  };
+  enable = true;
+  package = pkgs.vscodium;
+  extensions = with pkgs.vscode-extensions; [
+    ms-python.python
+    eamodio.gitlens
+    vscodevim.vim
+    ms-toolsai.jupyter
+  ];
+};
+
 
   # ----------------------------
   # Git config
