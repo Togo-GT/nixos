@@ -44,3 +44,4 @@ sudo nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
 sudo nix flake update
 sudo nixos-rebuild switch --flake .#nixos-btw
 nix-store --verify --check-contents
+#GT-nixos-btw
