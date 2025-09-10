@@ -189,6 +189,22 @@ in
       defaultBranch = main
   '';
 
+    # SSH-klient konfiguration
+  programs.ssh = {
+    enable = true;
+    includes = ["~/.ssh/config.d/*"];
+    extraConfig = ''
+      Host *
+        ForwardAgent yes
+    '';
+  };
+
+  # Bruger-specifikke SSH-indstillinger
+  home.file.".ssh/config".text = ''
+    Host github.com
+      IdentityFile ~/.ssh/github_key
+  '';
+
   # ----------------------------
   # Tmux Configuration
   # ----------------------------

@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 { pkgs, ... }:
 
 {
@@ -54,13 +47,29 @@
   # ----------------------------
   # 🔒 Security / SSH / sudo
   # ----------------------------
-  services.openssh.enable = true;              # 🟢 SSH server
-  services.openssh.settings = {
-    PermitRootLogin = "no";                    # ❌ Disable root login
-    PasswordAuthentication = false;            # 🔒 Disable password auth
+  services.openssh = {
+    enable = true;              # 🟢 SSH server
+    settings = {
+      PermitRootLogin = "no";   # ❌ Disable root login (god praksis)
+      PasswordAuthentication = false; # 🔒 Disable password auth (kun nøgler)
+      # Overvej også disse sikkerhedsindstillinger:
+      KbdInteractiveAuthentication = false;
+      PermitEmptyPasswords = false;
+      X11Forwarding = false;    # Deaktiver hvis ikke nødvendigt
+    };
   };
 
-  security.sudo.wheelNeedsPassword = false;    # 🟢 Wheel group sudo without password
+  security.sudo.wheelNeedsPassword = false; # 🟢 Convenient, men vær opmærksom på sikkerhedsimplikationer
+
+  # SSH-nøgle konfiguration - sørg for formatet er korrekt
+  users.users."Togo-GT" = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ]; # 🛠️ Vigtigt: Brugeren skal være i wheel group for sudo
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqRnOgrK3+tVuWYuyikrgbxAlA84lizDk4yV7JgFUu0 michael.kaare.nielse@gmail.com"
+    ];
+  };
+
 
   # ----------------------------
   # 🔊 Audio & Printing
