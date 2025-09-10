@@ -149,4 +149,4 @@
   # ----------------------------
   system.stateVersion = "25.05";               # 📌 Required
 }
-#GT-nixos-btw
+#GT-nixos-btw 
