@@ -43,5 +43,6 @@
 sudo nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
 sudo nix flake update
 sudo nixos-rebuild switch --flake .#nixos-btw
+sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix
 nix-store --verify --check-contents
 #GT-nixos-btw
