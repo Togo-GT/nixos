@@ -1,0 +1,43 @@
+nixos-config/
+├── flake.nix
+├── flake.lock
+├── hosts/
+│   ├── laptop/
+│   │   ├── default.nix
+│   │   └── hardware-configuration.nix
+│   └── server/
+│       ├── default.nix
+│       └── hardware-configuration.nix
+├── modules/
+│   ├── system/
+│   │   ├── audio.nix
+│   │   ├── boot.nix
+│   │   ├── networking.nix
+│   │   └── video.nix
+│   └── hardware/
+│       ├── bluetooth.nix
+│       ├── printers.nix
+│       └── sensors.nix
+├── profiles/
+│   ├── base.nix
+│   ├── desktop.nix
+│   └── development.nix
+├── overlays/
+│   ├── custom-packages.nix
+│   └── default.nix
+├── secrets/
+│   ├── age.nix
+│   ├── keys/
+│   └── secrets.nix
+├── packages/
+│   └── custom-software/
+│       └── default.nix
+├── lib/
+│   └── helpers.nix
+├── users/
+│   ├── default.nix
+│   ├── home-manager.nix
+│   └── user1/
+│       └── home.nix
+├── .editorconfig
+└── README.md
