@@ -11,3 +11,4 @@
     ├── home-manager/       # ✅ Brugerkonfigurationer
     ├── services/           # ✅ Tjenestekonfigurationer
     └── packages.nix        # ✅ Pakkedefinitioner
+1
