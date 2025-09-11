@@ -37,9 +37,8 @@ let
     autojump zsh-autosuggestions zsh-syntax-highlighting
     zoxide eza tldr
 
-    # Editors - VÆLG KUN ÉN NEOVIM!
+    # Editors
     nano
-    # neovim  # Fjern kommentar hvis du vil bruge Neovim
   ];
 in
 {
@@ -74,6 +73,14 @@ in
       source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
       source ${pkgs.autojump}/share/autojump/autojump.zsh
 
+      # Start SSH agent if not running
+      if [ -z "$SSH_AUTH_SOCK" ]; then
+        eval "$(ssh-agent -s)" > /dev/null
+      fi
+
+      # Add SSH key if not already added
+      ssh-add -l > /dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null
+
       # Git Power Dashboard
       function git_power_dashboard() {
         local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
@@ -105,17 +112,56 @@ in
   };
 
   # ----------------------------
-  # Bash Configuration (Backup)
+  # SSH Configuration
   # ----------------------------
-  programs.bash = {
+  programs.ssh = {
     enable = true;
-    shellAliases = commonAliases;
-    initExtra = ''
-      export EDITOR=nano
-      export VISUAL=nano
-      alias ls="eza --icons --group-directories-first"
+    # Ensure SSH agent starts automatically
+    startAgent = true;
+    # Add your SSH key to the agent
+    extraConfig = ''
+      AddKeysToAgent yes
     '';
   };
+
+  # ----------------------------
+  # Git Configuration
+  # ----------------------------
+  programs.git = {
+    enable = true;
+    userName = "Togo-GT";
+    userEmail = "michael.kaare.nielsen@gmail.com";
+    # Use SSH instead of HTTPS for GitHub
+    extraConfig = {
+      url."git@github.com:".insteadOf = "https://github.com/";
+      # Use SSH for authentication instead of HTTPS tokens
+      core.sshCommand = "ssh -i ~/.ssh/id_ed25519";
+      # Optional: Set a credential helper if needed
+      # credential.helper = "store";
+    };
+    aliases = {
+      st = "status";
+      co = "checkout";
+      br = "branch";
+      cm = "commit";
+      lg = "log --oneline --graph --decorate --all";
+    };
+  };
+
+  # ----------------------------
+  # Generate SSH key if it doesn't exist
+  # ----------------------------
+  home.activation.setupSSHKey = let
+    sshKey = "/home/gt/.ssh/id_ed25519";
+  in pkgs.lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f ${sshKey} ]; then
+      echo "Generating SSH key for GitHub..."
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -C "michael.kaare.nielsen@gmail.com" -f ${sshKey} -N ""
+      echo "SSH key generated at ${sshKey}.pub"
+      echo "Please add this key to your GitHub account:"
+      cat ${sshKey}.pub
+    fi
+  '';
 
   # ----------------------------
   # Terminal emulator
@@ -156,6 +202,7 @@ in
     userSettings = {
       "editor.fontSize" = 14;
       "window.zoomLevel" = 1;
+      "git.useForcePushWithLease" = true;
     };
     extensions = [
       pkgs.vscode-extensions.ms-python.python
@@ -164,46 +211,6 @@ in
       pkgs.vscode-extensions.ms-toolsai.jupyter
     ];
   };
-
-  # ----------------------------
-  # Git Configuration
-  # ----------------------------
-  programs.git.enable = true;
-  home.file.".gitconfig".text = ''
-    [user]
-      name = "Togo-GT"
-      email = "michael.kaare.nielsen@gmail.com"
-    [core]
-      editor = nano
-    [alias]
-      st = status
-      co = checkout
-      br = branch
-      cm = commit
-      lg = log --oneline --graph --decorate --all
-    [credential]
-      helper = cache --timeout=3600
-    [pull]
-      rebase = false
-    [init]
-      defaultBranch = main
-  '';
-
-    # SSH-klient konfiguration
-  programs.ssh = {
-    enable = true;
-    includes = ["~/.ssh/config.d/*"];
-    extraConfig = ''
-      Host *
-        ForwardAgent yes
-    '';
-  };
-
-  # Bruger-specifikke SSH-indstillinger
-  home.file.".ssh/config".text = ''
-    Host github.com
-      IdentityFile ~/.ssh/github_key
-  '';
 
   # ----------------------------
   # Tmux Configuration
@@ -229,6 +236,6 @@ in
     LC_ALL = "en_US.UTF-8";
     PAGER  = "less";
     MANPAGER = "less";
+    GIT_SSH_COMMAND = "ssh -i ~/.ssh/id_ed25519"; # Ensure Git uses the correct SSH key
   };
 }
-#GT-nixos-btw
