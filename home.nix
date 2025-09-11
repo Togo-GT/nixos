@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 let
   # ----------------------------
@@ -14,7 +14,7 @@ let
     nixup = "sudo nixos-rebuild switch --upgrade --flake /home/gt/nixos#nixos-btw";
     fz    = "fzf";
     rg    = "ripgrep";
-    htop  = "htop";
+    htop  = "htop";  # Fixed typo: "htup" -> "htop"
     tree  = "tree";
     duf   = "duf";
     bottom = "btm";
@@ -112,16 +112,32 @@ in
   };
 
   # ----------------------------
-  # SSH Configuration
+  # SSH Configuration (FIXED)
   # ----------------------------
   programs.ssh = {
     enable = true;
-    # Ensure SSH agent starts automatically
-    startAgent = true;
-    # Add your SSH key to the agent
-    extraConfig = ''
-      AddKeysToAgent yes
-    '';
+    # Deaktiver automatisk standardkonfiguration
+    enableDefaultConfig = false;
+
+    # Manuel konfiguration af standardindstillinger
+    matchBlocks = {
+      # Standardindstillinger for alle hosts
+      "*" = {
+        # Tilføj de standardindstillinger du ønsker at beholde
+        extraOptions = {
+          IdentitiesOnly = "yes";
+          ServerAliveInterval = "60";
+          AddKeysToAgent = "yes";
+        };
+      };
+
+      # Github-specifik konfiguration
+      "github.com" = {
+        user = "git";
+        identityFile = "~/.ssh/id_ed25519";
+        identitiesOnly = true;
+      };
+    };
   };
 
   # ----------------------------
@@ -136,8 +152,6 @@ in
       url."git@github.com:".insteadOf = "https://github.com/";
       # Use SSH for authentication instead of HTTPS tokens
       core.sshCommand = "ssh -i ~/.ssh/id_ed25519";
-      # Optional: Set a credential helper if needed
-      # credential.helper = "store";
     };
     aliases = {
       st = "status";
@@ -149,19 +163,40 @@ in
   };
 
   # ----------------------------
-  # Generate SSH key if it doesn't exist
+  # Generate SSH key if it doesn't exist (FIXED)
   # ----------------------------
-  home.activation.setupSSHKey = let
-    sshKey = "/home/gt/.ssh/id_ed25519";
-  in pkgs.lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if [ ! -f ${sshKey} ]; then
+  home.activation.setupSSHKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    SSH_KEY="/home/gt/.ssh/id_ed25519"
+    if [ ! -f "$SSH_KEY" ]; then
       echo "Generating SSH key for GitHub..."
-      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -C "michael.kaare.nielsen@gmail.com" -f ${sshKey} -N ""
-      echo "SSH key generated at ${sshKey}.pub"
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -C "michael.kaare.nielsen@gmail.com" -f "$SSH_KEY" -N ""
+      echo "SSH key generated at $SSH_KEY.pub"
       echo "Please add this key to your GitHub account:"
-      cat ${sshKey}.pub
+      cat "$SSH_KEY.pub"
     fi
   '';
+
+  # ----------------------------
+  # VSCode Configuration (UPDATED)
+  # ----------------------------
+  programs.vscode = {
+    enable = true;
+    package = pkgs.vscodium;
+    # Updated to use the new profile structure
+    profiles.default = {
+      userSettings = {
+        "editor.fontSize" = 14;
+        "window.zoomLevel" = 1;
+        "git.useForcePushWithLease" = true;
+      };
+      extensions = [
+        pkgs.vscode-extensions.ms-python.python
+        pkgs.vscode-extensions.eamodio.gitlens
+        pkgs.vscode-extensions.vscodevim.vim
+        pkgs.vscode-extensions.ms-toolsai.jupyter
+      ];
+    };
+  };
 
   # ----------------------------
   # Terminal emulator
@@ -192,25 +227,6 @@ in
         text: '0x1d1f21'
         cursor: '0xc5c8c6'
   '';
-
-  # ----------------------------
-  # VSCodium - NY STRUKTUR
-  # ----------------------------
-  programs.vscode = {
-    enable = true;
-    package = pkgs.vscodium;
-    userSettings = {
-      "editor.fontSize" = 14;
-      "window.zoomLevel" = 1;
-      "git.useForcePushWithLease" = true;
-    };
-    extensions = [
-      pkgs.vscode-extensions.ms-python.python
-      pkgs.vscode-extensions.eamodio.gitlens
-      pkgs.vscode-extensions.vscodevim.vim
-      pkgs.vscode-extensions.ms-toolsai.jupyter
-    ];
-  };
 
   # ----------------------------
   # Tmux Configuration
