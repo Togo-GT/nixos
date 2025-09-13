@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{  pkgs, lib, ... }:
 
 let
   # ----------------------------
@@ -18,7 +18,7 @@ let
     tree  = "tree";
     duf   = "duf";
     bottom = "btm";
-    add = "add ."
+    add = "add .";
   };
 
   # ----------------------------
