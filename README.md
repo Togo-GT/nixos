@@ -40,13 +40,13 @@
 - build  = kun bygning
 - rollback = nødstop
 
-sudo nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
-sudo nix flake update
-sudo nixos-rebuild switch --flake .#nixos-btw
+nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
+nix flake update
+nixos-rebuild switch --flake .#nixos-btw
 home-manager switch --flake .#gt
 
 
-sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix
+nixos-generate-config --show-hardware-config > hardware-configuration.nix
 nix-store --verify --check-contents
 
 #GT-nixos-btw
