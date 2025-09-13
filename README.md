@@ -45,7 +45,7 @@ nix flake update
 nixos-rebuild switch --flake .#nixos-btw
 home-manager switch --flake .#gt
 
-
+nix flake lock --update-input home-manager
 nixos-generate-config --show-hardware-config > hardware-configuration.nix
 nix-store --verify --check-contents
 

@@ -14,10 +14,11 @@ let
     nixup = "sudo nixos-rebuild switch --upgrade --flake /home/gt/nixos#nixos-btw";
     fz    = "fzf";
     rg    = "ripgrep";
-    htop  = "htop";  # Fixed typo: "htup" -> "htop"
+    htop  = "htop";
     tree  = "tree";
     duf   = "duf";
     bottom = "btm";
+    add = "add ."
   };
 
   # ----------------------------
