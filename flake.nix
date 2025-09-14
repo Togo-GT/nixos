@@ -107,10 +107,10 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
 
-          # ✅ New backup config
-          home-manager.backup.enable = true;
-          home-manager.backup.path = "/home/Togo-GT/backups/home-manager";
-          home-manager.backup.fileExtension = "backup";
+          # ❌ FJERNET: Forældet backup-konfiguration
+          # home-manager.backup.enable = true;
+          # home-manager.backup.path = "/home/Togo-GT/backups/home-manager";
+          # home-manager.backup.fileExtension = "backup";
 
           home-manager.users.Togo-GT = { pkgs, lib, ... }: {
             home.username = "Togo-GT";
@@ -207,7 +207,7 @@
                 multiplier: 3
               cursor:
                 style: Block
-                blink: true
+                blink = true
               live_config_reload: true
               colors:
                 primary:
