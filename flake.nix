@@ -19,7 +19,7 @@
         # ----------------------------
         # Hardware config (inlined)
         # ----------------------------
-        ({ lib, config, ... }: {  # ← Tilføjet lib og config her
+        ({ lib, config, ... }: {
           boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
           boot.initrd.kernelModules = [ ];
           boot.kernelModules = [ "kvm-intel" ];
@@ -68,7 +68,7 @@
           services.xserver.enable = true;
           services.displayManager.sddm.enable = true;
           services.desktopManager.plasma6.enable = true;
-          services.xserver.displayManager.defaultSession = "plasma"; # ← Tilføjet for sikkerhed
+          services.xserver.displayManager.defaultSession = "plasma";
 
           services.xserver.xkb.layout = "dk";
           console.keyMap = "dk-latin1";
@@ -98,7 +98,7 @@
             isNormalUser = true;
             extraGroups = [ "networkmanager" "wheel" ];
             description = "Togo-GT";
-            packages = with pkgs; [ kate firefox ];
+            packages = with pkgs; [ kdePackages.kate firefox ];  # ← Fixed kate
           };
 
           # Firewall
@@ -176,7 +176,7 @@
                 };
                 "github.com" = {
                   user = "git";
-                  identityFile = "/home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
+                  identityFile = "/home/Togo-GT/.ssh/id_ed25519";
                   identitiesOnly = true;
                 };
               };
@@ -188,7 +188,7 @@
               userEmail = "michael.kaare.nielsen@gmail.com";
               extraConfig = {
                 url."git@github.com:".insteadOf = "https://github.com/";
-                core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
+                core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
               };
               aliases = {
                 st = "status";
@@ -260,7 +260,7 @@
               LC_ALL = "en_DK.UTF-8";
               PAGER = "less";
               MANPAGER = "less";
-              GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
+              GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
             };
           };
         }
