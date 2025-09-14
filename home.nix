@@ -1,6 +1,9 @@
 { pkgs, lib, ... }:
 
 let
+  # ----------------------------
+  # Shell aliases
+  # ----------------------------
   commonAliases = {
     ll     = "ls -la";
     gs     = "git status";
@@ -8,16 +11,19 @@ let
     br     = "git branch";
     cm     = "git commit";
     lg     = "git log --oneline --graph --decorate --all";
-    nixup  = "sudo nixos-rebuild switch --upgrade --flake /etc/nixos#nixos-btw";
+    nixup  = "cd /home/Togo-GT/nixos-btw && sudo nixos-rebuild switch --upgrade --flake /home/Togo-GT/nixos-btw#nixos-btw && home-manager switch --flake /home/Togo-GT/nixos-btw#Togo-GT";
+
     fz     = "fzf";
     rg     = "ripgrep";
     htop   = "htop";
     tree   = "tree";
     duf    = "duf";
     bottom = "btm";
-    add    = "git add .";
   };
 
+  # ----------------------------
+  # CLI Packages
+  # ----------------------------
   cliPackages = with pkgs; [
     delta lazygit curl ripgrep fzf fd bat jq
     htop bottom duf ncdu tree neofetch
@@ -32,8 +38,14 @@ in
   home.homeDirectory = "/home/Togo-GT";
   home.stateVersion = "25.05";
 
+  # ----------------------------
+  # Packages
+  # ----------------------------
   home.packages = cliPackages;
 
+  # ----------------------------
+  # Zsh Configuration
+  # ----------------------------
   programs.zsh = {
     enable = true;
     shellAliases = commonAliases;
@@ -41,46 +53,34 @@ in
       export EDITOR=nano
       export VISUAL=nano
 
+      # Better navigation
       eval "$(zoxide init zsh)"
       alias ls="eza --icons --group-directories-first"
       alias l="eza --icons --group-directories-first -l"
       alias la="eza --icons --group-directories-first -la"
 
+      # Load plugins from Nix
       source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
       source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
       source ${pkgs.autojump}/share/autojump/autojump.zsh
 
+      # Start SSH agent if not running
       if [ -z "$SSH_AUTH_SOCK" ]; then
         eval "$(ssh-agent -s)" > /dev/null
       fi
       ssh-add -l > /dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null
 
-      function git_power_dashboard() {
-        local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-        if [[ -n $branch ]]; then
-          local ahead behind staged unstaged untracked
-          ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
-          behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0)
-          staged=$(git diff --cached --name-only 2>/dev/null | wc -l)
-          unstaged=$(git diff --name-only 2>/dev/null | wc -l)
-          untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l)
-          local out="" in="" s="" u="" t=""
-          [[ $ahead -gt 0 ]] && out="%F{green}↑$ahead%f"
-          [[ $behind -gt 0 ]] && in="%F{red}↓$behind%f"
-          [[ $staged -gt 0 ]] && s="%F{blue}+$staged%f"
-          [[ $unstaged -gt 0 ]] && u="%F{yellow}~$unstaged%f"
-          [[ $untracked -gt 0 ]] && t="%F{magenta}?$untracked%f"
-          echo "%F{cyan}$branch%f $out$in$s$u$t"
-        fi
-      }
+      # Git add, commit, pull, push function (fixed)
+      gacp() { git add . && git commit -m "\${1:-update}" && git pull --rebase && git push; }
 
-      if [[ -f ~/.p10k.zsh ]]; then
-        source ~/.p10k.zsh
-        typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
-      fi
+      # Minimal prompt
+      PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
     '';
   };
 
+  # ----------------------------
+  # SSH Configuration
+  # ----------------------------
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
@@ -102,6 +102,9 @@ in
     };
   };
 
+  # ----------------------------
+  # Git Configuration
+  # ----------------------------
   programs.git = {
     enable = true;
     userName = "Togo-GT";
@@ -119,6 +122,9 @@ in
     };
   };
 
+  # ----------------------------
+  # Generate SSH key if missing
+  # ----------------------------
   home.activation.setupSSHKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
     SSH_KEY="$HOME/.ssh/id_ed25519"
     if [ ! -f "$SSH_KEY" ]; then
@@ -126,12 +132,26 @@ in
       mkdir -p "$HOME/.ssh"
       chmod 700 "$HOME/.ssh"
       ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -C "michael.kaare.nielsen@gmail.com" -f "$SSH_KEY" -N ""
+      ssh-add "$SSH_KEY" 2>/dev/null || true
       echo "SSH key generated at $SSH_KEY.pub"
       echo "Please add this key to your GitHub account:"
       cat "$SSH_KEY.pub"
     fi
   '';
 
+  # ----------------------------
+  # Start SSH agent on graphical login (Plasma/KDE)
+  # ----------------------------
+  home.file."~/.xprofile".text = ''
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+      eval "$(ssh-agent -s)" > /dev/null
+    fi
+    ssh-add -l > /dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null
+  '';
+
+  # ----------------------------
+  # VSCode Configuration
+  # ----------------------------
   programs.vscode = {
     enable = true;
     package = pkgs.vscodium;
@@ -150,6 +170,9 @@ in
     };
   };
 
+  # ----------------------------
+  # Alacritty terminal
+  # ----------------------------
   programs.alacritty.enable = true;
   home.file.".config/alacritty/alacritty.yml".text = ''
     window:
@@ -177,6 +200,9 @@ in
         cursor: '0xc5c8c6'
   '';
 
+  # ----------------------------
+  # Tmux configuration
+  # ----------------------------
   home.file.".tmux.conf".text = ''
     set -g mouse on
     setw -g mode-keys vi
@@ -190,6 +216,9 @@ in
     set -g renumber-windows on
   '';
 
+  # ----------------------------
+  # Session variables
+  # ----------------------------
   home.sessionVariables = {
     LANG        = "en_DK.UTF-8";
     LC_ALL      = "en_DK.UTF-8";

@@ -46,3 +46,21 @@ GT    nix flake update
 gt nix flake lock --update-input home-manager
 nix flake update
 
+
+
+
+cd /home/Togo-GT/nixos-btw
+
+# Rebuild NixOS + Home Manager
+nixup
+
+# Or separately:
+sudo nixos-rebuild switch --flake /home/Togo-GT/nixos-btw#nixos-btw
+home-manager switch --flake /home/Togo-GT/nixos-btw#Togo-GT
+
+
+# Use Git add → commit → pull → push
+gacp "My commit message"
+gacp  # defaults to "update"
+
+

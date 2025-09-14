@@ -5,9 +5,7 @@
     ./hardware-configuration.nix
   ];
 
-  # ----------------------------
   # System basics
-  # ----------------------------
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
@@ -30,9 +28,7 @@
     LC_TIME = "da_DK.UTF-8";
   };
 
-  # ----------------------------
   # Desktop Environment
-  # ----------------------------
   services.xserver.enable = true;
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
@@ -40,9 +36,7 @@
   services.xserver.xkb.layout = "dk";
   console.keyMap = "dk-latin1";
 
-  # ----------------------------
   # Security
-  # ----------------------------
   services.openssh.enable = true;
   services.openssh.settings = {
     PermitRootLogin = "no";
@@ -51,9 +45,7 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  # ----------------------------
   # Audio
-  # ----------------------------
   services.printing.enable = true;
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -63,9 +55,7 @@
   services.pipewire.alsa.support32Bit = true;
   services.pipewire.pulse.enable = true;
 
-  # ----------------------------
   # User
-  # ----------------------------
   users.users.Togo-GT = {
     isNormalUser = true;
     extraGroups = [ "networkmanager" "wheel" ];
@@ -73,15 +63,11 @@
     packages = with pkgs; [ kdePackages.kate firefox ];
   };
 
-  # ----------------------------
   # Firewall
-  # ----------------------------
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
   networking.firewall.allowedUDPPorts = [ 53 ];
 
-  # ----------------------------
   # Nix / Flakes
-  # ----------------------------
   nix = {
     package = pkgs.nixVersions.latest;
     settings.experimental-features = [ "nix-command" "flakes" ];
