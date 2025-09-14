@@ -1,23 +1,22 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports = [
-    ./hardware-configuration.nix   # 🖥 Hardware scan results
+    ./hardware-configuration.nix
   ];
 
   # ----------------------------
-  # 💻 System Basics
+  # System basics
   # ----------------------------
-  boot.loader.grub.enable = true;             # 🥧 Enable GRUB
-  boot.loader.grub.device = "/dev/sda";       # 💽 GRUB install device
-  boot.loader.grub.useOSProber = true;        # 🔍 Detect other OSes
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/sda";
+  boot.loader.grub.useOSProber = true;
 
-  networking.hostName = "nixos-btw";          # 🌐 Hostname
-  networking.networkmanager.enable = true;    # 📶 NetworkManager
+  networking.hostName = "nixos-btw";
+  networking.networkmanager.enable = true;
 
-  time.timeZone = "Europe/Copenhagen";        # ⏰ Timezone
+  time.timeZone = "Europe/Copenhagen";
 
-  # Locale: English system with Danish formatting 🇩🇰
   i18n.defaultLocale = "en_DK.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "da_DK.UTF-8";
@@ -32,121 +31,61 @@
   };
 
   # ----------------------------
-  # 🖥 Desktop Environment
+  # Desktop Environment
   # ----------------------------
-  services.xserver.enable = true;              # 🖥 Enable X server
-  services.displayManager.sddm.enable = true;  # 🔑 SDDM login manager
-  services.desktopManager.plasma6.enable = true; # 🖱 KDE Plasma 6
+  services.xserver.enable = true;
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
 
-  services.xserver.xkb = {
-    layout = "dk";     # ⌨️ Keyboard layout
-    variant = "";
-  };
-  console.keyMap = "dk-latin1";                # 🖥 Console keyboard
+  services.xserver.xkb.layout = "dk";
+  console.keyMap = "dk-latin1";
 
   # ----------------------------
-  # 🔒 Security / SSH / sudo
+  # Security
   # ----------------------------
-  services.openssh.enable = true;              # 🟢 SSH server
+  services.openssh.enable = true;
   services.openssh.settings = {
-    PermitRootLogin = "no";                    # ❌ Disable root login
-    PasswordAuthentication = false;            # 🔒 Disable password auth
+    PermitRootLogin = "no";
+    PasswordAuthentication = false;
   };
 
-  security.sudo.wheelNeedsPassword = false;    # 🟢 Wheel group sudo without password
+  security.sudo.wheelNeedsPassword = false;
 
   # ----------------------------
-  # 🔊 Audio & Printing
+  # Audio
   # ----------------------------
-  services.printing.enable = true;             # 🖨 Enable CUPS
-  services.pulseaudio.enable = false;          # ❌ Disable PulseAudio
-  security.rtkit.enable = true;                # 🎵 Realtime audio support
+  services.printing.enable = true;
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
 
-  services.pipewire = {
-    enable = true;                             # 🎧 PipeWire audio
-    alsa.enable = true;                        # 🔊 ALSA support
-    alsa.support32Bit = true;                  # 🖥 32-bit ALSA
-    pulse.enable = true;                       # 🔉 Pulse compatibility
-  };
+  services.pipewire.enable = true;
+  services.pipewire.alsa.enable = true;
+  services.pipewire.alsa.support32Bit = true;
+  services.pipewire.pulse.enable = true;
 
   # ----------------------------
-  # 👤 Users
+  # User
   # ----------------------------
   users.users.Togo-GT = {
-    isNormalUser = true;                       # 🧑‍💻 Normal user
+    isNormalUser = true;
+    extraGroups = [ "networkmanager" "wheel" ];
     description = "Togo-GT";
-    extraGroups = [ "networkmanager" "wheel" ]; # 👥 User groups
-    packages = with pkgs; [
-      kdePackages.kate   # ✍️ KDE editor
-    ];
-  };
-
-  # Install firefox.
-  programs.firefox.enable = true;
-
-
-  # ----------------------------
-  # 🐚 Shell / Terminal
-  # ----------------------------
-  programs.zsh = {
-    enable = true;                             # 🐚 Aktivér Zsh
-    enableCompletion = true;                   # ✅ Autocompletion
-    autosuggestions.enable = true;             # 💡 Forslag mens du skriver
-    syntaxHighlighting.enable = true;          # 🎨 Syntax highlighting
-
-    ohMyZsh = {                                # ⬅️ nyt navn (camelCase)
-      enable = true;                           # ⚡ Aktivér Oh My Zsh
-      theme = "robbyrussell";                  # 🎭 Tema
-      plugins = [
-        "git"                                  # 🌱 Git integration
-        "z"                                    # 📂 Hurtig navigation
-        "sudo"                                 # 🔑 Sudo shortcut
-        "autojump"                             # 🚀 Hop hurtigt i mapper
-        "syntax-highlighting"                  # 🎨 Syntax highlighting plugin
-        "history-substring-search"             # ⏮ Historik-søgning
-      ];
-    };
-  };
-
-
-  # 🛠 CLI-værktøjer
-  environment.systemPackages = with pkgs; [
-    wget        # 🌐 Downloads
-    curl        # 🌐 Downloads
-    htop        # 📊 Monitor
-    neofetch    # 💻 System info
-    tree        # 🌲 Mappeoversigt
-    nil         # 🟢 Nix LSP server til editor
-    git
-    bash
-  ];
-
-  # ----------------------------
-  # 🌐 Netværk & Crypto
-  # ----------------------------
-  programs.mtr.enable = true;                  # 📡 Network diagnostics
-
-  programs.gnupg.agent = {
-    enable = true;                             # 🔑 GPG agent
-    enableSSHSupport = true;                   # 🔑 SSH support
+    packages = with pkgs; [ kdePackages.kate firefox ];
   };
 
   # ----------------------------
-  # 🔥 Firewall
+  # Firewall
   # ----------------------------
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ]; # 🔒 TCP ports
-  networking.firewall.allowedUDPPorts = [ 53 ];        # 🔒 UDP ports
+  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  networking.firewall.allowedUDPPorts = [ 53 ];
 
   # ----------------------------
-  # 🚀 Nix / Flakes
+  # Nix / Flakes
   # ----------------------------
   nix = {
-    package = pkgs.nixVersions.latest;         # 🧪 Latest Nix
-    settings.experimental-features = [ "nix-command" "flakes" ]; # ⚡ Flakes
+    package = pkgs.nixVersions.latest;
+    settings.experimental-features = [ "nix-command" "flakes" ];
   };
 
-  # ----------------------------
-  # ⚡ System version
-  # ----------------------------
-  system.stateVersion = "25.05";               # 📌 Required
+  system.stateVersion = "25.05";
 }

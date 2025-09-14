@@ -1,9 +1,6 @@
 { pkgs, lib, ... }:
 
 let
-  # ----------------------------
-  # Shell aliases
-  # ----------------------------
   commonAliases = {
     ll     = "ls -la";
     gs     = "git status";
@@ -18,12 +15,9 @@ let
     tree   = "tree";
     duf    = "duf";
     bottom = "btm";
-    add    = "add .";
+    add    = "git add .";
   };
 
-  # ----------------------------
-  # CLI Packages
-  # ----------------------------
   cliPackages = with pkgs; [
     delta lazygit curl ripgrep fzf fd bat jq
     htop bottom duf ncdu tree neofetch
@@ -38,42 +32,29 @@ in
   home.homeDirectory = "/home/Togo-GT";
   home.stateVersion = "25.05";
 
-  # ----------------------------
-  # Packages
-  # ----------------------------
   home.packages = cliPackages;
 
-  # ----------------------------
-  # Zsh Configuration
-  # ----------------------------
   programs.zsh = {
     enable = true;
     shellAliases = commonAliases;
     initContent = ''
-      # Editor - nano as default
       export EDITOR=nano
       export VISUAL=nano
 
-      # Better navigation
       eval "$(zoxide init zsh)"
       alias ls="eza --icons --group-directories-first"
       alias l="eza --icons --group-directories-first -l"
       alias la="eza --icons --group-directories-first -la"
 
-      # Load plugins from Nix
       source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
       source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
       source ${pkgs.autojump}/share/autojump/autojump.zsh
 
-      # Start SSH agent if not running
       if [ -z "$SSH_AUTH_SOCK" ]; then
         eval "$(ssh-agent -s)" > /dev/null
       fi
-
-      # Add SSH key if not already added
       ssh-add -l > /dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null
 
-      # Git Power Dashboard
       function git_power_dashboard() {
         local branch=$(git symbolic-ref --short HEAD 2>/dev/null)
         if [[ -n $branch ]]; then
@@ -83,19 +64,16 @@ in
           staged=$(git diff --cached --name-only 2>/dev/null | wc -l)
           unstaged=$(git diff --name-only 2>/dev/null | wc -l)
           untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l)
-
           local out="" in="" s="" u="" t=""
           [[ $ahead -gt 0 ]] && out="%F{green}↑$ahead%f"
           [[ $behind -gt 0 ]] && in="%F{red}↓$behind%f"
           [[ $staged -gt 0 ]] && s="%F{blue}+$staged%f"
           [[ $unstaged -gt 0 ]] && u="%F{yellow}~$unstaged%f"
           [[ $untracked -gt 0 ]] && t="%F{magenta}?$untracked%f"
-
           echo "%F{cyan}$branch%f $out$in$s$u$t"
         fi
       }
 
-      # Powerlevel10k prompt if installed
       if [[ -f ~/.p10k.zsh ]]; then
         source ~/.p10k.zsh
         typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
@@ -103,12 +81,10 @@ in
     '';
   };
 
-  # ----------------------------
-  # SSH Configuration
-  # ----------------------------
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
+    startAgent = true;
 
     matchBlocks = {
       "*" = {
@@ -126,9 +102,6 @@ in
     };
   };
 
-  # ----------------------------
-  # Git Configuration
-  # ----------------------------
   programs.git = {
     enable = true;
     userName = "Togo-GT";
@@ -146,9 +119,6 @@ in
     };
   };
 
-  # ----------------------------
-  # Generate SSH key if missing (corrected)
-  # ----------------------------
   home.activation.setupSSHKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
     SSH_KEY="$HOME/.ssh/id_ed25519"
     if [ ! -f "$SSH_KEY" ]; then
@@ -162,9 +132,6 @@ in
     fi
   '';
 
-  # ----------------------------
-  # VSCode Configuration
-  # ----------------------------
   programs.vscode = {
     enable = true;
     package = pkgs.vscodium;
@@ -183,9 +150,6 @@ in
     };
   };
 
-  # ----------------------------
-  # Alacritty terminal
-  # ----------------------------
   programs.alacritty.enable = true;
   home.file.".config/alacritty/alacritty.yml".text = ''
     window:
@@ -213,9 +177,6 @@ in
         cursor: '0xc5c8c6'
   '';
 
-  # ----------------------------
-  # Tmux configuration
-  # ----------------------------
   home.file.".tmux.conf".text = ''
     set -g mouse on
     setw -g mode-keys vi
@@ -229,12 +190,9 @@ in
     set -g renumber-windows on
   '';
 
-  # ----------------------------
-  # Session variables
-  # ----------------------------
   home.sessionVariables = {
-    LANG        = "en_US.UTF-8";
-    LC_ALL      = "en_US.UTF-8";
+    LANG        = "en_DK.UTF-8";
+    LC_ALL      = "en_DK.UTF-8";
     PAGER       = "less";
     MANPAGER    = "less";
     GIT_SSH_COMMAND = "ssh -i ~/.ssh/id_ed25519";

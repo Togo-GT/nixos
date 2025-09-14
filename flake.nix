@@ -7,10 +7,15 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }: {
-    # ---- System config (nixos-rebuild) ----
+  outputs = { self, nixpkgs, home-manager, ... }:
+  let
+    system = "x86_64-linux";
+    pkgs = import nixpkgs { inherit system; };
+  in
+  {
+    # ---- NixOS system configuration ----
     nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+      inherit system;
       modules = [
         ./configuration.nix
         home-manager.nixosModules.home-manager
@@ -22,12 +27,10 @@
       ];
     };
 
-    # ---- Home Manager only (home-manager switch) ----
-    homeConfigurations = {
-      gt = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs { system = "x86_64-linux"; };
-        modules = [ ./home.nix ];
-      };
+    # ---- Home Manager standalone configuration ----
+    homeConfigurations.Togo-GT = home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [ ./home.nix ];
     };
   };
 }
