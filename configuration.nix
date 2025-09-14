@@ -134,6 +134,7 @@
     tree        # 🌲 Mappeoversigt
     nil         # 🟢 Nix LSP server til editor
     bash
+    git
   ];
 
   # ----------------------------
