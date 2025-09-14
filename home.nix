@@ -43,8 +43,8 @@ let
   ];
 in
 {
-  home.username = "gt";
-  home.homeDirectory = "/home/gt";
+  home.username = "Togo-GT";
+  home.homeDirectory = "/home/Togo-GT";
   home.stateVersion = "25.05";
 
   # ----------------------------
