@@ -1,44 +1,35 @@
-{  pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 
 let
   # ----------------------------
   # Shell aliases
   # ----------------------------
   commonAliases = {
-    ll    = "ls -la";
-    gs    = "git status";
-    co    = "git checkout";
-    br    = "git branch";
-    cm    = "git commit";
-    lg    = "git log --oneline --graph --decorate --all";
-    nixup = "sudo nixos-rebuild switch --upgrade --flake /home/gt/nixos#nixos-btw";
-    fz    = "fzf";
-    rg    = "ripgrep";
-    htop  = "htop";
-    tree  = "tree";
-    duf   = "duf";
+    ll     = "ls -la";
+    gs     = "git status";
+    co     = "git checkout";
+    br     = "git branch";
+    cm     = "git commit";
+    lg     = "git log --oneline --graph --decorate --all";
+    nixup  = "sudo nixos-rebuild switch --upgrade --flake /etc/nixos#nixos-btw";
+    fz     = "fzf";
+    rg     = "ripgrep";
+    htop   = "htop";
+    tree   = "tree";
+    duf    = "duf";
     bottom = "btm";
-    add = "add .";
+    add    = "add .";
   };
 
   # ----------------------------
   # CLI Packages
   # ----------------------------
   cliPackages = with pkgs; [
-    # Dev tools
     delta lazygit curl ripgrep fzf fd bat jq
-
-    # System monitoring
     htop bottom duf ncdu tree neofetch
-
-    # Disk utilities
     gparted e2fsprogs
-
-    # Shell enhancements
     autojump zsh-autosuggestions zsh-syntax-highlighting
     zoxide eza tldr
-
-    # Editors
     nano
   ];
 in
@@ -53,17 +44,17 @@ in
   home.packages = cliPackages;
 
   # ----------------------------
-  # Zsh Configuration (Primary Shell)
+  # Zsh Configuration
   # ----------------------------
   programs.zsh = {
     enable = true;
     shellAliases = commonAliases;
     initContent = ''
-      # Editor - nano som standard
+      # Editor - nano as default
       export EDITOR=nano
       export VISUAL=nano
 
-      # Bedre navigation
+      # Better navigation
       eval "$(zoxide init zsh)"
       alias ls="eza --icons --group-directories-first"
       alias l="eza --icons --group-directories-first -l"
@@ -104,7 +95,7 @@ in
         fi
       }
 
-      # Powerlevel10k prompt hvis installeret
+      # Powerlevel10k prompt if installed
       if [[ -f ~/.p10k.zsh ]]; then
         source ~/.p10k.zsh
         typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time background_jobs git_power_dashboard)
@@ -113,26 +104,20 @@ in
   };
 
   # ----------------------------
-  # SSH Configuration (FIXED)
+  # SSH Configuration
   # ----------------------------
   programs.ssh = {
     enable = true;
-    # Deaktiver automatisk standardkonfiguration
     enableDefaultConfig = false;
 
-    # Manuel konfiguration af standardindstillinger
     matchBlocks = {
-      # Standardindstillinger for alle hosts
       "*" = {
-        # Tilføj de standardindstillinger du ønsker at beholde
         extraOptions = {
           IdentitiesOnly = "yes";
           ServerAliveInterval = "60";
           AddKeysToAgent = "yes";
         };
       };
-
-      # Github-specifik konfiguration
       "github.com" = {
         user = "git";
         identityFile = "~/.ssh/id_ed25519";
@@ -148,10 +133,8 @@ in
     enable = true;
     userName = "Togo-GT";
     userEmail = "michael.kaare.nielsen@gmail.com";
-    # Use SSH instead of HTTPS for GitHub
     extraConfig = {
       url."git@github.com:".insteadOf = "https://github.com/";
-      # Use SSH for authentication instead of HTTPS tokens
       core.sshCommand = "ssh -i ~/.ssh/id_ed25519";
     };
     aliases = {
@@ -164,12 +147,14 @@ in
   };
 
   # ----------------------------
-  # Generate SSH key if it doesn't exist (FIXED)
+  # Generate SSH key if missing (corrected)
   # ----------------------------
   home.activation.setupSSHKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    SSH_KEY="/home/gt/.ssh/id_ed25519"
+    SSH_KEY="$HOME/.ssh/id_ed25519"
     if [ ! -f "$SSH_KEY" ]; then
       echo "Generating SSH key for GitHub..."
+      mkdir -p "$HOME/.ssh"
+      chmod 700 "$HOME/.ssh"
       ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -C "michael.kaare.nielsen@gmail.com" -f "$SSH_KEY" -N ""
       echo "SSH key generated at $SSH_KEY.pub"
       echo "Please add this key to your GitHub account:"
@@ -178,12 +163,11 @@ in
   '';
 
   # ----------------------------
-  # VSCode Configuration (UPDATED)
+  # VSCode Configuration
   # ----------------------------
   programs.vscode = {
     enable = true;
     package = pkgs.vscodium;
-    # Updated to use the new profile structure
     profiles.default = {
       userSettings = {
         "editor.fontSize" = 14;
@@ -200,7 +184,7 @@ in
   };
 
   # ----------------------------
-  # Terminal emulator
+  # Alacritty terminal
   # ----------------------------
   programs.alacritty.enable = true;
   home.file.".config/alacritty/alacritty.yml".text = ''
@@ -230,7 +214,7 @@ in
   '';
 
   # ----------------------------
-  # Tmux Configuration
+  # Tmux configuration
   # ----------------------------
   home.file.".tmux.conf".text = ''
     set -g mouse on
@@ -249,10 +233,10 @@ in
   # Session variables
   # ----------------------------
   home.sessionVariables = {
-    LANG   = "en_US.UTF-8";
-    LC_ALL = "en_US.UTF-8";
-    PAGER  = "less";
-    MANPAGER = "less";
-    GIT_SSH_COMMAND = "ssh -i ~/.ssh/id_ed25519"; # Ensure Git uses the correct SSH key
+    LANG        = "en_US.UTF-8";
+    LC_ALL      = "en_US.UTF-8";
+    PAGER       = "less";
+    MANPAGER    = "less";
+    GIT_SSH_COMMAND = "ssh -i ~/.ssh/id_ed25519";
   };
 }

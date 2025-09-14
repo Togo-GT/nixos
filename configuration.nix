@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [
@@ -47,29 +47,13 @@
   # ----------------------------
   # 🔒 Security / SSH / sudo
   # ----------------------------
-  services.openssh = {
-    enable = true;              # 🟢 SSH server
-    settings = {
-      PermitRootLogin = "no";   # ❌ Disable root login (god praksis)
-      PasswordAuthentication = false; # 🔒 Disable password auth (kun nøgler)
-      # Overvej også disse sikkerhedsindstillinger:
-      KbdInteractiveAuthentication = false;
-      PermitEmptyPasswords = false;
-      X11Forwarding = false;    # Deaktiver hvis ikke nødvendigt
-    };
+  services.openssh.enable = true;              # 🟢 SSH server
+  services.openssh.settings = {
+    PermitRootLogin = "no";                    # ❌ Disable root login
+    PasswordAuthentication = false;            # 🔒 Disable password auth
   };
 
-  security.sudo.wheelNeedsPassword = false; # 🟢 Convenient, men vær opmærksom på sikkerhedsimplikationer
-
-  # SSH-nøgle konfiguration - sørg for formatet er korrekt
-  users.users."Togo-GT" = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ]; # 🛠️ Vigtigt: Brugeren skal være i wheel group for sudo
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqRnOgrK3+tVuWYuyikrgbxAlA84lizDk4yV7JgFUu0 michael.kaare.nielse@gmail.com"
-    ];
-  };
-
+  security.sudo.wheelNeedsPassword = false;    # 🟢 Wheel group sudo without password
 
   # ----------------------------
   # 🔊 Audio & Printing
@@ -88,9 +72,9 @@
   # ----------------------------
   # 👤 Users
   # ----------------------------
-  users.users.gt = {
+  users.users.Togo-GT = {
     isNormalUser = true;                       # 🧑‍💻 Normal user
-    description = "gt";
+    description = "Togo-GT";
     extraGroups = [ "networkmanager" "wheel" ]; # 👥 User groups
     packages = with pkgs; [
       kdePackages.kate   # ✍️ KDE editor
@@ -133,8 +117,8 @@
     neofetch    # 💻 System info
     tree        # 🌲 Mappeoversigt
     nil         # 🟢 Nix LSP server til editor
-    bash
     git
+    bash
   ];
 
   # ----------------------------
@@ -166,4 +150,3 @@
   # ----------------------------
   system.stateVersion = "25.05";               # 📌 Required
 }
-#GT-nixos-btw 

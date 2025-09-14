@@ -1,4 +1,3 @@
-
 ┌─────────────────────────────┐
 │       nixos-rebuild         │
 └─────────────────────────────┘
@@ -40,13 +39,10 @@
 - build  = kun bygning
 - rollback = nødstop
 
-nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
+GT    sudo nixos-rebuild switch --flake /etc/nixos#nixos-btw --upgrade
+
+GT    nix flake update
+
+gt nix flake lock --update-input home-manager
 nix flake update
-nixos-rebuild switch --flake .#nixos-btw
-home-manager switch --flake .#gt
 
-nix flake lock --update-input home-manager
-nixos-generate-config --show-hardware-config > hardware-configuration.nix
-nix-store --verify --check-contents
-
-#GT-nixos-btw

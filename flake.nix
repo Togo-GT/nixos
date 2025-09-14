@@ -1,26 +1,31 @@
 {
+  description = "NixOS config for nixos-btw with Home Manager ✨";
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { nixpkgs, home-manager, ... }: {
-    nixosConfigurations = {
-      "nixos-btw" = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ./configuration.nix  # eller din konfigurationsfil
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.users.gt = import ./home.nix;
-          }
-        ];
-      };
+  outputs = { self, nixpkgs, home-manager, ... }: {
+    # ---- System config (nixos-rebuild) ----
+    nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ./configuration.nix
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.users.Togo-GT = import ./home.nix;
+        }
+      ];
     };
 
+    # ---- Home Manager only (home-manager switch) ----
     homeConfigurations = {
-      "Togo-GT" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      gt = home-manager.lib.homeManagerConfiguration {
+        pkgs = import nixpkgs { system = "x86_64-linux"; };
         modules = [ ./home.nix ];
       };
     };
