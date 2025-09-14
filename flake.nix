@@ -68,7 +68,7 @@
           services.xserver.enable = true;
           services.displayManager.sddm.enable = true;
           services.desktopManager.plasma6.enable = true;
-          services.xserver.displayManager.defaultSession = "plasma";
+          services.displayManager.defaultSession = "plasma";
 
           services.xserver.xkb.layout = "dk";
           console.keyMap = "dk-latin1";
@@ -98,7 +98,7 @@
             isNormalUser = true;
             extraGroups = [ "networkmanager" "wheel" ];
             description = "Togo-GT";
-            packages = with pkgs; [ kdePackages.kate firefox ];  # ← Fixed kate
+            packages = with pkgs; [ kdePackages.kate firefox ];
           };
 
           # Firewall
@@ -123,6 +123,9 @@
             home.username = "Togo-GT";
             home.homeDirectory = "/home/Togo-GT";
             home.stateVersion = "25.05";
+
+            # Automatically backup files that would be overwritten
+            home-manager.backupFileExtension = "backup";
 
             # CLI packages
             home.packages = with pkgs; [
