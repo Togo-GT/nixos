@@ -7,12 +7,10 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, ... }:
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-
-    # Home Manager module
     hmModule = import "${home-manager}/nixos" { inherit pkgs; };
   in
   {
@@ -75,12 +73,10 @@
         # Home Manager module
         # ----------------------------
         hmModule
-      ];
 
-      # ----------------------------
-      # Home Manager configuration
-      # ----------------------------
-      nixosModules = [
+        # ----------------------------
+        # Home Manager user configuration
+        # ----------------------------
         ({ pkgs, lib, ... }: {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
@@ -99,9 +95,6 @@
               zoxide eza tldr nano
             ];
 
-            # ----------------------------
-            # Zsh
-            # ----------------------------
             programs.zsh.enable = true;
             programs.zsh.shellAliases = {
               ll = "ls -la";
@@ -126,15 +119,9 @@
               PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
             '';
 
-            # ----------------------------
-            # SSH
-            # ----------------------------
             programs.ssh.enable = true;
             programs.ssh.enableAgent = true;
 
-            # ----------------------------
-            # Git
-            # ----------------------------
             programs.git.enable = true;
             programs.git.userName = "Togo-GT";
             programs.git.userEmail = "michael.kaare.nielsen@gmail.com";
@@ -150,9 +137,6 @@
               lg = "log --oneline --graph --decorate --all";
             };
 
-            # ----------------------------
-            # VSCode / VSCodium
-            # ----------------------------
             programs.vscode.enable = true;
             programs.vscode.package = pkgs.vscodium;
             programs.vscode.profiles.default = {
@@ -169,9 +153,6 @@
               ];
             };
 
-            # ----------------------------
-            # Alacritty
-            # ----------------------------
             programs.alacritty.enable = true;
             home.file.".config/alacritty/alacritty.yml".text = ''
               window:
@@ -197,9 +178,6 @@
                   cursor: '0xc5c8c6'
             '';
 
-            # ----------------------------
-            # Tmux
-            # ----------------------------
             home.file.".tmux.conf".text = ''
               set -g mouse on
               setw -g mode-keys vi
@@ -213,9 +191,6 @@
               set -g renumber-windows on
             '';
 
-            # ----------------------------
-            # Environment variables
-            # ----------------------------
             home.sessionVariables = {
               LANG = "en_DK.UTF-8";
               LC_ALL = "en_DK.UTF-8";
