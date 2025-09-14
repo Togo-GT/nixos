@@ -15,10 +15,33 @@
     nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
       inherit system;
       modules = [
+
+        # ----------------------------
+        # Hardware config (inlined)
+        # ----------------------------
+        ({ lib, config, ... }: {  # ← Tilføjet lib og config her
+          boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
+          boot.initrd.kernelModules = [ ];
+          boot.kernelModules = [ "kvm-intel" ];
+          boot.extraModulePackages = [ ];
+
+          fileSystems."/" = {
+            device = "/dev/disk/by-uuid/8f424373-0299-411b-82ba-475f6289a59d";
+            fsType = "ext4";
+          };
+
+          swapDevices = [ ];
+
+          networking.useDHCP = lib.mkDefault true;
+
+          nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+          hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+        })
+
+        # ----------------------------
+        # System basics
+        # ----------------------------
         {
-          # ----------------------------
-          # System basics
-          # ----------------------------
           boot.loader.grub.enable = true;
           boot.loader.grub.device = "/dev/sda";
           boot.loader.grub.useOSProber = true;
@@ -45,6 +68,7 @@
           services.xserver.enable = true;
           services.displayManager.sddm.enable = true;
           services.desktopManager.plasma6.enable = true;
+          services.xserver.displayManager.defaultSession = "plasma"; # ← Tilføjet for sikkerhed
 
           services.xserver.xkb.layout = "dk";
           console.keyMap = "dk-latin1";
@@ -133,7 +157,6 @@
                 source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
                 source ${pkgs.autojump}/share/autojump/autojump.zsh
 
-                # Git helper
                 gacp() { git add . && git commit -m "update" && git pull --rebase && git push; }
 
                 PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
@@ -153,7 +176,7 @@
                 };
                 "github.com" = {
                   user = "git";
-                  identityFile = "~/.ssh/id_ed25519";
+                  identityFile = "/home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
                   identitiesOnly = true;
                 };
               };
@@ -165,7 +188,7 @@
               userEmail = "michael.kaare.nielsen@gmail.com";
               extraConfig = {
                 url."git@github.com:".insteadOf = "https://github.com/";
-                core.sshCommand = "ssh -i ~/.ssh/id_ed25519";
+                core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
               };
               aliases = {
                 st = "status";
@@ -176,7 +199,6 @@
               };
             };
 
-            # VSCode
             programs.vscode = {
               enable = true;
               package = pkgs.vscodium;
@@ -195,7 +217,6 @@
               };
             };
 
-            # Alacritty
             programs.alacritty.enable = true;
             home.file.".config/alacritty/alacritty.yml".text = ''
               window:
@@ -221,7 +242,6 @@
                   cursor: '0xc5c8c6'
             '';
 
-            # Tmux
             home.file.".tmux.conf".text = ''
               set -g mouse on
               setw -g mode-keys vi
@@ -240,7 +260,7 @@
               LC_ALL = "en_DK.UTF-8";
               PAGER = "less";
               MANPAGER = "less";
-              GIT_SSH_COMMAND = "ssh -i ~/.ssh/id_ed25519";
+              GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";  # ← Absolut sti
             };
           };
         }
