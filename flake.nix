@@ -23,19 +23,13 @@
         # ----------------------------
         ({ lib, config, ... }: {
           boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
-          boot.initrd.kernelModules = [ ];
           boot.kernelModules = [ "kvm-intel" ];
-          boot.extraModulePackages = [ ];
-
           fileSystems."/" = {
             device = "/dev/disk/by-uuid/8f424373-0299-411b-82ba-475f6289a59d";
             fsType = "ext4";
           };
-
           swapDevices = [ ];
           networking.useDHCP = lib.mkDefault true;
-
-          nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
           hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
         })
 
@@ -45,46 +39,24 @@
         {
           boot.loader.grub.enable = true;
           boot.loader.grub.device = "/dev/sda";
-          boot.loader.grub.useOSProber = true;
-
           networking.hostName = "nixos-btw";
           networking.networkmanager.enable = true;
 
           time.timeZone = "Europe/Copenhagen";
-
           i18n.defaultLocale = "en_DK.UTF-8";
-          i18n.extraLocaleSettings = {
-            LC_ADDRESS = "da_DK.UTF-8";
-            LC_IDENTIFICATION = "da_DK.UTF-8";
-            LC_MEASUREMENT = "da_DK.UTF-8";
-            LC_MONETARY = "da_DK.UTF-8";
-            LC_NAME = "da_DK.UTF-8";
-            LC_NUMERIC = "da_DK.UTF-8";
-            LC_PAPER = "da_DK.UTF-8";
-            LC_TELEPHONE = "da_DK.UTF-8";
-            LC_TIME = "da_DK.UTF-8";
-          };
+          console.keyMap = "dk-latin1";
 
           services.xserver.enable = true;
           services.displayManager.sddm.enable = true;
           services.desktopManager.plasma6.enable = true;
           services.displayManager.defaultSession = "plasma";
 
-          services.xserver.xkb.layout = "dk";
-          console.keyMap = "dk-latin1";
-
           services.openssh.enable = true;
-          services.openssh.settings = {
-            PermitRootLogin = "no";
-            PasswordAuthentication = false;
-          };
-
           security.sudo.wheelNeedsPassword = false;
 
           users.users.Togo-GT = {
             isNormalUser = true;
             extraGroups = [ "networkmanager" "wheel" ];
-            description = "Togo-GT";
             packages = with pkgs; [ kdePackages.kate firefox ];
           };
 
@@ -96,35 +68,34 @@
         }
 
         # ----------------------------
-        # Home Manager integration
+        # Home Manager
         # ----------------------------
         (import "${home-manager}/nixos") {
           pkgs = pkgs;
 
-          configuration = {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
+          modules = [
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "backup";
 
-            # ⚡ global backup
-            home-manager.backupFileExtension = "backup";
+              users.Togo-GT = { pkgs, ... }: {
+                home.username = "Togo-GT";
+                home.homeDirectory = "/home/Togo-GT";
+                home.stateVersion = "25.05";
 
-            users.Togo-GT = { pkgs, lib, ... }: {
-              home.username = "Togo-GT";
-              home.homeDirectory = "/home/Togo-GT";
-              home.stateVersion = "25.05";
+                # CLI packages
+                home.packages = with pkgs; [
+                  delta lazygit curl ripgrep fzf fd bat jq
+                  htop bottom duf ncdu tree neofetch
+                  gparted e2fsprogs
+                  autojump zsh-autosuggestions zsh-syntax-highlighting
+                  zoxide eza tldr nano
+                ];
 
-              # CLI packages
-              home.packages = with pkgs; [
-                delta lazygit curl ripgrep fzf fd bat jq
-                htop bottom duf ncdu tree neofetch
-                gparted e2fsprogs
-                autojump zsh-autosuggestions zsh-syntax-highlighting
-                zoxide eza tldr nano
-              ];
-
-              programs.zsh = {
-                enable = true;
-                shellAliases = {
+                # Zsh setup
+                programs.zsh.enable = true;
+                programs.zsh.shellAliases = {
                   ll = "ls -la";
                   gs = "git status";
                   co = "git checkout";
@@ -133,7 +104,7 @@
                   lg = "git log --oneline --graph --decorate --all";
                   nixup = "cd /home/Togo-GT/nixos-btw && sudo nixos-rebuild switch --upgrade --flake .#nixos-btw && home-manager switch --flake .#Togo-GT";
                 };
-                initContent = ''
+                programs.zsh.initContent = ''
                   export EDITOR=nano
                   export VISUAL=nano
 
@@ -150,12 +121,12 @@
 
                   PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
                 '';
-              };
 
-              programs.ssh = {
-                enable = true;
-                enableDefaultConfig = false;
-                matchBlocks = {
+                # SSH
+                programs.ssh.enable = true;
+                programs.ssh.enableAgent = true;
+                programs.ssh.enableDefaultConfig = false;
+                programs.ssh.matchBlocks = {
                   "*" = {
                     extraOptions = {
                       IdentitiesOnly = "yes";
@@ -169,33 +140,78 @@
                     identitiesOnly = true;
                   };
                 };
-              };
 
-              programs.git = {
-                enable = true;
-                userName = "Togo-GT";
-                userEmail = "michael.kaare.nielsen@gmail.com";
-                extraConfig = {
+                # Git
+                programs.git.enable = true;
+                programs.git.userName = "Togo-GT";
+                programs.git.userEmail = "michael.kaare.nielsen@gmail.com";
+                programs.git.extraConfig = {
                   url."git@github.com:".insteadOf = "https://github.com/";
                   core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
                 };
-                aliases = {
+                programs.git.aliases = {
                   st = "status";
                   co = "checkout";
                   br = "branch";
                   cm = "commit";
                   lg = "log --oneline --graph --decorate --all";
                 };
-              };
 
-              programs.vscode = {
-                enable = true;
-                package = pkgs.vscodium;
-              };
+                # VSCode / VSCodium
+                programs.vscode.enable = true;
+                programs.vscode.package = pkgs.vscodium;
 
-              programs.alacritty.enable = true;
-            };
-          };
+                # Alacritty terminal
+                programs.alacritty.enable = true;
+                home.file.".config/alacritty/alacritty.yml".text = ''
+                  window:
+                    padding: { x: 8, y: 8 }
+                    dynamic_title: true
+                  font:
+                    normal:
+                      family: "Monospace"
+                      size: 12.0
+                  scrolling:
+                    history: 20000
+                    multiplier: 3
+                  cursor:
+                    style: Block
+                    blink: true
+                  live_config_reload: true
+                  colors:
+                    primary:
+                      background: '0x1d1f21'
+                      foreground: '0xc5c8c6'
+                    cursor:
+                      text: '0x1d1f21'
+                      cursor: '0xc5c8c6'
+                '';
+
+                # Tmux
+                home.file.".tmux.conf".text = ''
+                  set -g mouse on
+                  setw -g mode-keys vi
+                  bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+                  set -g prefix C-a
+                  unbind C-b
+                  bind C-a send-prefix
+                  set -g status-bg colour234
+                  set -g status-fg colour136
+                  set -g history-limit 10000
+                  set -g renumber-windows on
+                '';
+
+                # Session variables
+                home.sessionVariables = {
+                  LANG = "en_DK.UTF-8";
+                  LC_ALL = "en_DK.UTF-8";
+                  PAGER = "less";
+                  MANPAGER = "less";
+                  GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
+                };
+              };
+            }
+          ];
         }
       ];
     };
