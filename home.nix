@@ -84,7 +84,6 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    startAgent = true;
 
     matchBlocks = {
       "*" = {
