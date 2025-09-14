@@ -70,8 +70,8 @@ in
       fi
       ssh-add -l > /dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null
 
-      # Git add, commit, pull, push function (fixed)
-      gacp() { git add . && git commit -m "\${1:-update}" && git pull --rebase && git push; }
+      # Git add, commit, pull, push function
+      gacp() { git add . && git commit -m "update" && git pull --rebase && git push; }
 
       # Minimal prompt
       PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
