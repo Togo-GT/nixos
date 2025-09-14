@@ -88,7 +88,7 @@
             isNormalUser = true;
             extraGroups = [ "networkmanager" "wheel" ];
             description = "Togo-GT";
-            packages = with pkgs; [ kdePackages.kate firefox ]; # Opdateret kate
+            packages = with pkgs; [ kdePackages.kate firefox ];
           };
 
           networking.firewall.allowedTCPPorts = [ 22 80 443 ];
@@ -106,8 +106,11 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          home-manager.backupFileExtension = "backup";
-          home-manager.backupDir = "/home/Togo-GT/backups/home-manager";
+
+          # ✅ New backup config
+          home-manager.backup.enable = true;
+          home-manager.backup.path = "/home/Togo-GT/backups/home-manager";
+          home-manager.backup.fileExtension = "backup";
 
           home-manager.users.Togo-GT = { pkgs, lib, ... }: {
             home.username = "Togo-GT";
