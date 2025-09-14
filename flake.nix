@@ -7,20 +7,17 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }@inputs:
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    hmModule = import "${home-manager}/nixos" { inherit pkgs; };
-  in
-  {
+  in {
     nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
       inherit system;
-
       modules = [
 
         # ----------------------------
-        # Hardware config
+        # Hardware config (inlined)
         # ----------------------------
         ({ lib, config, ... }: {
           boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
@@ -31,6 +28,7 @@
           };
           swapDevices = [ ];
           networking.useDHCP = lib.mkDefault true;
+          nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
           hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
         })
 
@@ -40,47 +38,76 @@
         {
           boot.loader.grub.enable = true;
           boot.loader.grub.device = "/dev/sda";
+          boot.loader.grub.useOSProber = true;
 
           networking.hostName = "nixos-btw";
           networking.networkmanager.enable = true;
 
           time.timeZone = "Europe/Copenhagen";
+
           i18n.defaultLocale = "en_DK.UTF-8";
-          console.keyMap = "dk-latin1";
+          i18n.extraLocaleSettings = {
+            LC_ADDRESS = "da_DK.UTF-8";
+            LC_IDENTIFICATION = "da_DK.UTF-8";
+            LC_MEASUREMENT = "da_DK.UTF-8";
+            LC_MONETARY = "da_DK.UTF-8";
+            LC_NAME = "da_DK.UTF-8";
+            LC_NUMERIC = "da_DK.UTF-8";
+            LC_PAPER = "da_DK.UTF-8";
+            LC_TELEPHONE = "da_DK.UTF-8";
+            LC_TIME = "da_DK.UTF-8";
+          };
 
           services.xserver.enable = true;
           services.displayManager.sddm.enable = true;
           services.desktopManager.plasma6.enable = true;
           services.displayManager.defaultSession = "plasma";
 
+          services.xserver.xkb.layout = "dk";
+          console.keyMap = "dk-latin1";
+
           services.openssh.enable = true;
+          services.openssh.settings = {
+            PermitRootLogin = "no";
+            PasswordAuthentication = false;
+          };
+
           security.sudo.wheelNeedsPassword = false;
+
+          services.printing.enable = true;
+          services.pulseaudio.enable = false;
+          security.rtkit.enable = true;
+          services.pipewire = {
+            enable = true;
+            alsa.enable = true;
+            alsa.support32Bit = true;
+            pulse.enable = true;
+          };
 
           users.users.Togo-GT = {
             isNormalUser = true;
             extraGroups = [ "networkmanager" "wheel" ];
-            packages = with pkgs; [ kdePackages.kate firefox ];
+            description = "Togo-GT";
+            packages = with pkgs; [ kdePackages.kate firefox ]; # Opdateret kate
           };
 
           networking.firewall.allowedTCPPorts = [ 22 80 443 ];
           networking.firewall.allowedUDPPorts = [ 53 ];
 
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
           system.stateVersion = "25.05";
         }
 
         # ----------------------------
-        # Home Manager module
+        # Home Manager integration
         # ----------------------------
-        hmModule
-
-        # ----------------------------
-        # Home Manager user configuration
-        # ----------------------------
-        ({ pkgs, lib, ... }: {
+        home-manager.nixosModules.home-manager
+        {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.backupFileExtension = "backup";
+          home-manager.backupDir = "/home/Togo-GT/backups/home-manager";
 
           home-manager.users.Togo-GT = { pkgs, lib, ... }: {
             home.username = "Togo-GT";
@@ -95,62 +122,72 @@
               zoxide eza tldr nano
             ];
 
-            programs.zsh.enable = true;
-            programs.zsh.shellAliases = {
-              ll = "ls -la";
-              gs = "git status";
-              co = "git checkout";
-              br = "git branch";
-              cm = "git commit";
-              lg = "git log --oneline --graph --decorate --all";
-              nixup = "cd /home/Togo-GT/nixos-btw && sudo nixos-rebuild switch --upgrade --flake .#nixos-btw && home-manager switch --flake .#Togo-GT";
+            programs.zsh = {
+              enable = true;
+              shellAliases = {
+                ll = "ls -la";
+                gs = "git status";
+                co = "git checkout";
+                br = "git branch";
+                cm = "git commit";
+                lg = "git log --oneline --graph --decorate --all";
+                nixup = "cd /home/Togo-GT/nixos-btw && sudo nixos-rebuild switch --upgrade --flake .#nixos-btw && home-manager switch --flake .#Togo-GT";
+              };
+              initContent = ''
+                export EDITOR=nano
+                export VISUAL=nano
+
+                eval "$(zoxide init zsh)"
+                alias ls="eza --icons --group-directories-first"
+                alias l="eza --icons --group-directories-first -l"
+                alias la="eza --icons --group-directories-first -la"
+
+                source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+                source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+                source ${pkgs.autojump}/share/autojump/autojump.zsh
+
+                gacp() { git add . && git commit -m "update" && git pull --rebase && git push; }
+
+                PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
+              '';
             };
-            programs.zsh.initContent = ''
-              export EDITOR=nano
-              export VISUAL=nano
-              eval "$(zoxide init zsh)"
-              alias ls="eza --icons --group-directories-first"
-              alias l="eza --icons --group-directories-first -l"
-              alias la="eza --icons --group-directories-first -la"
-              source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-              source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-              source ${pkgs.autojump}/share/autojump/autojump.zsh
-              gacp() { git add . && git commit -m "update" && git pull --rebase && git push; }
-              PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
-            '';
 
             programs.ssh.enable = true;
             programs.ssh.enableAgent = true;
 
-            programs.git.enable = true;
-            programs.git.userName = "Togo-GT";
-            programs.git.userEmail = "michael.kaare.nielsen@gmail.com";
-            programs.git.extraConfig = {
-              "url.git@github.com:.insteadOf" = "https://github.com/";
-              "core.sshCommand" = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
-            };
-            programs.git.aliases = {
-              st = "status";
-              co = "checkout";
-              br = "branch";
-              cm = "commit";
-              lg = "log --oneline --graph --decorate --all";
+            programs.git = {
+              enable = true;
+              userName = "Togo-GT";
+              userEmail = "michael.kaare.nielsen@gmail.com";
+              extraConfig = {
+                url."git@github.com:".insteadOf = "https://github.com/";
+                core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
+              };
+              aliases = {
+                st = "status";
+                co = "checkout";
+                br = "branch";
+                cm = "commit";
+                lg = "log --oneline --graph --decorate --all";
+              };
             };
 
-            programs.vscode.enable = true;
-            programs.vscode.package = pkgs.vscodium;
-            programs.vscode.profiles.default = {
-              userSettings = {
-                "editor.fontSize" = 14;
-                "window.zoomLevel" = 1;
-                "git.useForcePushWithLease" = true;
+            programs.vscode = {
+              enable = true;
+              package = pkgs.vscodium;
+              profiles.default = {
+                userSettings = {
+                  "editor.fontSize" = 14;
+                  "window.zoomLevel" = 1;
+                  "git.useForcePushWithLease" = true;
+                };
+                extensions = with pkgs.vscode-extensions; [
+                  ms-python.python
+                  eamodio.gitlens
+                  vscodevim.vim
+                  ms-toolsai.jupyter
+                ];
               };
-              extensions = with pkgs.vscode-extensions; [
-                ms-python.python
-                eamodio.gitlens
-                vscodevim.vim
-                ms-toolsai.jupyter
-              ];
             };
 
             programs.alacritty.enable = true;
@@ -199,7 +236,30 @@
               GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
             };
           };
-        })
+        }
+
+        # ----------------------------
+        # Systemd timer/service for cleanup
+        # ----------------------------
+        {
+          systemd.timers.cleanOldHomeManagerBackups = {
+            description = "Ryd gamle Home Manager backup-filer over 30 dage gamle";
+            timerConfig.OnCalendar = "*-*-* 03:00:00";
+            timerConfig.Persistent = true;
+            wantedBy = [ "timers.target" ];
+          };
+
+          systemd.services.cleanOldHomeManagerBackups = {
+            description = "Fjern Home Manager backups ældre end 30 dage";
+            serviceConfig.Type = "oneshot";
+            serviceConfig.ExecStart = ''
+              mkdir -p /home/Togo-GT/backups/home-manager
+              find /home/Togo-GT/backups/home-manager -type f -name "*.backup" -mtime +30 -exec rm -v {} \;
+            '';
+            wantedBy = [ "multi-user.target" ];
+          };
+        }
+
       ];
     };
   };
