@@ -21,8 +21,7 @@
         # ----------------------------
         ({ lib, config, ... }: {
           boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
-          boot.kernelModules = [ "iwlwifi" ];  # for Intel Wi-Fi
-          boot.kernelModules = [ "kvm-intel" ];
+          boot.kernelModules = [ "iwlwifi" "kvm-intel" ];
           fileSystems."/" = {
             device = "/dev/disk/by-uuid/8f424373-0299-411b-82ba-475f6289a59d";
             fsType = "ext4";
