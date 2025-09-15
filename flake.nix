@@ -84,8 +84,8 @@
             pulse.enable = true;
           };
 
-          # ✅ Enable ssh-agent as systemd user service
-          services.ssh-agent.enable = true;
+          # ✅ CORRECT: Enable ssh-agent
+          programs.ssh.startAgent = true;
 
           users.users.Togo-GT = {
             isNormalUser = true;
