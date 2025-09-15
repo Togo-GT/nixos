@@ -81,3 +81,34 @@ nixos-btw-config/
 │
 └── ## Flake output configuration
     └── nixosConfigurations.nixos-btw                       ## Final system configuration
+
+
+nixos-btw/
+├── flake.nix
+├── flake.lock
+├── configuration.nix
+├── hardware-configuration.nix
+└── modules/
+    ├── default.nix
+    ├── system/
+    │   ├── default.nix
+    │   ├── boot.nix
+    │   ├── networking.nix
+    │   ├── locale.nix
+    │   ├── audio.nix
+    │   ├── security.nix
+    │   └── services.nix
+    ├── home-manager/
+    │   ├── default.nix
+    │   ├── user.nix
+    │   ├── programs/
+    │   │   ├── zsh.nix
+    │   │   ├── git.nix
+    │   │   ├── vscode.nix
+    │   │   └── alacritty.nix
+    │   └── files/
+    │       ├── alacritty.nix
+    │       └── tmux.nix
+    └── systemd/
+        ├── garbage-collection.nix
+        └── backup-cleanup.nix
