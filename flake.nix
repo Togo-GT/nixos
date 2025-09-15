@@ -244,7 +244,7 @@
         }
 
         # ----------------------------
-        # Systemd timer/service for cleanup
+        # Systemd timer/service for Home Manager backup cleanup
         # ----------------------------
         {
           systemd.timers.cleanOldHomeManagerBackups = {
@@ -262,7 +262,32 @@
           };
         }
 
-      ];  # ← This closing bracket was missing for the modules list
+        # ----------------------------
+        # Systemd timer/service for automatic garbage collection
+        # ----------------------------
+        {
+          systemd.timers.nix-garbage-collection = {
+            description = "Automatic Nix garbage collection";
+            timerConfig = {
+              OnCalendar = "weekly";  # Runs once per week
+              Persistent = true;
+              RandomizedDelaySec = "1h";  # Random delay to avoid system load spikes
+            };
+            wantedBy = [ "timers.target" ];
+          };
+
+          systemd.services.nix-garbage-collection = {
+            description = "Run nix-collect-garbage -d";
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${pkgs.nix}/bin/nix-collect-garbage -d";
+              User = "root";  # This service needs root privileges
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+        }
+
+      ];
     };
   };
 }
