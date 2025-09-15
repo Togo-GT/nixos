@@ -154,8 +154,10 @@
               '';
             };
 
-            programs.ssh.enable = true;
-            programs.ssh.enableAgent = true;
+            programs.ssh = {
+              enable = true;
+              startAgent = true;
+            };
 
             programs.git = {
               enable = true;
