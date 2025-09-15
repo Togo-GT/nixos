@@ -11,11 +11,13 @@
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
+    username = "Togo-GT";
+    hostname = "nixos-btw";
+    hashedPassword = "$6$.aOioWFqbvAWRma1$VbHHVMKVQe7hX7tVroZSQt04KJGT2fKSqQmcRRAIKQj0nt1cyd/yubLDRi5j.M9vkTMQgd96dloKJv71Fk1ja0";
   in {
-    nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
       inherit system;
       modules = [
-
         # ----------------------------
         # Hardware config
         # ----------------------------
@@ -28,6 +30,13 @@
             device = "/dev/disk/by-uuid/8f424373-0299-411b-82ba-475f6289a59d";
             fsType = "ext4";
           };
+
+          # UEFI mount point (if using UEFI)
+          fileSystems."/boot/efi" = {
+            device = "/dev/disk/by-uuid/YOUR_EFI_PARTITION_UUID"; # Replace with your EFI partition UUID
+            fsType = "vfat";
+          };
+
           swapDevices = [ ];
           networking.useDHCP = lib.mkDefault true;
           nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
@@ -38,11 +47,24 @@
         # System basics
         # ----------------------------
         {
-          boot.loader.grub.enable = true;
-          boot.loader.grub.device = "/dev/sda";
-          boot.loader.grub.useOSProber = true;
+          # UEFI Support - Uncomment if your system supports UEFI
+          boot.loader = {
+            # For UEFI systems (uncomment these lines):
+            # systemd-boot.enable = true;
+            # efi.canTouchEfiVariables = true;
+            # efi.efiSysMountPoint = "/boot/efi";
 
-          networking.hostName = "nixos-btw";
+            # For legacy BIOS systems (keep these):
+            grub = {
+              enable = true;
+              device = "/dev/sda";
+              useOSProber = true;
+              efiSupport = false; # Set to true if using UEFI
+            };
+            # efi.canTouchEfiVariables = true; # Uncomment if using UEFI
+          };
+
+          networking.hostName = hostname;
           networking.networkmanager.enable = true;
 
           time.timeZone = "Europe/Copenhagen";
@@ -60,45 +82,98 @@
             LC_TIME = "da_DK.UTF-8";
           };
 
-          services.xserver.enable = true;
-          services.displayManager.sddm.enable = true;
-          services.desktopManager.plasma6.enable = true;
-          services.displayManager.defaultSession = "plasma";
+          services.xserver = {
+            enable = true;
+            layout = "dk";
+            xkbVariant = "";
+          };
 
-          services.xserver.xkb.layout = "dk";
+          services.displayManager = {
+            sddm = {
+              enable = true;
+              wayland.enable = true;
+            };
+            defaultSession = "plasma";
+          };
+
+          services.desktopManager.plasma6.enable = true;
+
           console.keyMap = "dk-latin1";
 
-          services.openssh.enable = true;
-          services.openssh.settings = {
-            PermitRootLogin = "no";
-            PasswordAuthentication = false;
+          services.openssh = {
+            enable = true;
+            settings = {
+              PermitRootLogin = "no";
+              PasswordAuthentication = false;
+            };
           };
 
           security.sudo.wheelNeedsPassword = false;
 
           services.printing.enable = true;
-          services.pulseaudio.enable = false;
           security.rtkit.enable = true;
+
           services.pipewire = {
             enable = true;
-            alsa.enable = true;
-            alsa.support32Bit = true;
+            alsa = {
+              enable = true;
+              support32Bit = true;
+            };
             pulse.enable = true;
+            jack.enable = true;
           };
 
           programs.ssh.startAgent = true;
 
-          users.users.Togo-GT = {
+          users.users.${username} = {
             isNormalUser = true;
-            extraGroups = [ "networkmanager" "wheel" ];
-            description = "Togo-GT";
-            packages = with pkgs; [ kdePackages.kate firefox ];
+            extraGroups = [ "networkmanager" "wheel" "audio" "video" ];
+            description = username;
+            hashedPassword = hashedPassword;
+            packages = with pkgs; [
+              kdePackages.kate
+              firefox
+              htop
+              neovim
+              wget
+              git
+
+              # Additional useful packages
+              bat # Better cat
+              eza # Better ls
+              fzf # Fuzzy finder
+              ripgrep # Better grep
+
+              # Development
+              nodejs
+              python3
+              gcc
+
+              # Productivity
+              libreoffice
+              okular # PDF viewer
+            ];
           };
 
-          networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-          networking.firewall.allowedUDPPorts = [ 53 ];
+          # Create a root user with no password (login via sudo only)
+          users.users.root = {
+            hashedPassword = "*"; # Disable password login
+          };
 
-          nix.settings.experimental-features = [ "nix-command" "flakes" ];
+          networking.firewall = {
+            enable = true;
+            allowedTCPPorts = [ 22 80 443 ];
+            allowedUDPPorts = [ 53 ];
+          };
+
+          nix = {
+            settings.experimental-features = [ "nix-command" "flakes" ];
+            gc = {
+              automatic = true;
+              dates = "weekly";
+              options = "--delete-older-than 7d";
+            };
+          };
 
           system.stateVersion = "25.05";
         }
@@ -106,68 +181,115 @@
         # ----------------------------
         # Home Manager integration
         # ----------------------------
-        home-manager.nixosModules.home-manager {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            users.${username} = {
+              home = {
+                username = username;
+                homeDirectory = "/home/${username}";
+                stateVersion = "25.05";
+              };
 
-          home-manager.users.Togo-GT = { pkgs, lib, ... }: {
-            home.username = "Togo-GT";
-            home.homeDirectory = "/home/Togo-GT";
-            home.stateVersion = "25.05";
-            home.enableNixpkgsReleaseCheck = false;
+              programs = {
+                bash = {
+                  enable = true;
+                  initExtra = ''
+                    # Custom bash prompt
+                    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
-            programs.zsh.enable = true;
+                    # Aliases using the new packages
+                    alias cat='bat'
+                    alias ls='eza'
+                    alias grep='rg'
+                  '';
+                };
+                git = {
+                  enable = true;
+                  userName = "Togo-GT";
+                  userEmail = "your@email.com"; # Update with your email
+                  extraConfig = {
+                    init.defaultBranch = "main";
+                    pull.rebase = false;
+                  };
+                };
+                neovim = {
+                  enable = true;
+                  defaultEditor = true;
+                };
+              };
 
-            home.sessionVariables = {
-              SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/ssh-agent";
+              home.sessionVariables = {
+                EDITOR = "nvim";
+                VISUAL = "nvim";
+                SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/ssh-agent";
+              };
+
+              home.file = {
+                # Example: Create a custom .bash_aliases file
+                ".bash_aliases".text = ''
+                  alias ll='eza -l'
+                  alias la='eza -la'
+                  alias update='sudo nixos-rebuild switch --flake ~/nixos-config'
+                  alias nixup='sudo git add . && git commit -a && git push && sudo nix flake update && sudo nixos-rebuild switch --flake .#nixos-btw --upgrade'
+                  alias find='fzf'
+                '';
+              };
             };
           };
         }
-
-        # ----------------------------
-        # Auto Wi-Fi module
-        # ----------------------------
-        (import ./modules/autoWifi.nix)
 
         # ----------------------------
         # Systemd timers/services
         # ----------------------------
         {
-          systemd.timers.cleanOldHomeManagerBackups = {
-            description = "Ryd gamle Home Manager backup-filer over 30 dage gamle";
-            timerConfig.OnCalendar = "*-*-* 03:00:00";
-            timerConfig.Persistent = true;
-            wantedBy = [ "timers.target" ];
-          };
+          systemd = {
+            timers = {
+              cleanOldHomeManagerBackups = {
+                description = "Clean old Home Manager backup files older than 30 days";
+                timerConfig = {
+                  OnCalendar = "*-*-* 03:00:00";
+                  Persistent = true;
+                };
+                wantedBy = [ "timers.target" ];
+              };
 
-          systemd.services.cleanOldHomeManagerBackups = {
-            description = "Fjern Home Manager backups ældre end 30 dage";
-            serviceConfig.Type = "oneshot";
-            serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p /home/Togo-GT/backups/home-manager && find /home/Togo-GT/backups/home-manager -type f -name \"*.backup\" -mtime +30 -exec rm -v {} \\;'";
-            wantedBy = [ "multi-user.target" ];
-          };
-
-          systemd.timers.nix-garbage-collection = {
-            description = "Automatic Nix garbage collection";
-            timerConfig = {
-              OnCalendar = "weekly";
-              Persistent = true;
-              RandomizedDelaySec = "1h";
+              nix-garbage-collection = {
+                description = "Automatic Nix garbage collection";
+                timerConfig = {
+                  OnCalendar = "weekly";
+                  Persistent = true;
+                  RandomizedDelaySec = "1h";
+                };
+                wantedBy = [ "timers.target" ];
+              };
             };
-            wantedBy = [ "timers.target" ];
-          };
 
-          systemd.services.nix-garbage-collection = {
-            description = "Run nix-collect-garbage -d";
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = "${pkgs.nix}/bin/nix-collect-garbage -d";
-              User = "root";
+            services = {
+              cleanOldHomeManagerBackups = {
+                description = "Remove Home Manager backups older than 30 days";
+                serviceConfig = {
+                  Type = "oneshot";
+                  User = username;
+                  ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p /home/${username}/backups/home-manager && find /home/${username}/backups/home-manager -type f -name \"*.backup\" -mtime +30 -delete'";
+                };
+                wantedBy = [ "multi-user.target" ];
+              };
+
+              nix-garbage-collection = {
+                description = "Run nix-collect-garbage -d";
+                serviceConfig = {
+                  Type = "oneshot";
+                  ExecStart = "${pkgs.nix}/bin/nix-collect-garbage -d";
+                  User = "root";
+                };
+                wantedBy = [ "multi-user.target" ];
+              };
             };
-            wantedBy = [ "multi-user.target" ];
           };
         }
-
       ];
     };
   };
