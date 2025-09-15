@@ -151,7 +151,7 @@
 
               # Productivity
               libreoffice
-              okular # PDF viewer
+              kdePackages.okular # PDF viewer (Qt6 version)
             ];
           };
 
