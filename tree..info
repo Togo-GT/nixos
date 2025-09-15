@@ -1,43 +1,83 @@
-nixos-config/
-├── flake.nix
-├── flake.lock
-├── hosts/
-│   ├── laptop/
-│   │   ├── default.nix
-│   │   └── hardware-configuration.nix
-│   └── server/
-│       ├── default.nix
-│       └── hardware-configuration.nix
-├── modules/
-│   ├── system/
-│   │   ├── audio.nix
-│   │   ├── boot.nix
-│   │   ├── networking.nix
-│   │   └── video.nix
-│   └── hardware/
-│       ├── bluetooth.nix
-│       ├── printers.nix
-│       └── sensors.nix
-├── profiles/
-│   ├── base.nix
-│   ├── desktop.nix
-│   └── development.nix
-├── overlays/
-│   ├── custom-packages.nix
-│   └── default.nix
-├── secrets/
-│   ├── age.nix
-│   ├── keys/
-│   └── secrets.nix
-├── packages/
-│   └── custom-software/
-│       └── default.nix
-├── lib/
-│   └── helpers.nix
-├── users/
-│   ├── default.nix
-│   ├── home-manager.nix
-│   └── user1/
-│       └── home.nix
-├── .editorconfig
-└── README.md
+nixos-btw-config/
+├── ## Input sources for the flake
+├── inputs/
+│   ├── nixpkgs (github:NixOS/nixpkgs/nixos-25.05)          ## Primary package source
+│   └── home-manager (github:nix-community/home-manager/release-25.05)  ## User environment management
+│
+├── ## Main system configuration
+├── system configuration (nixosSystem)
+│   ├── ## Hardware-specific settings
+│   ├── hardware/
+│   │   ├── boot.initrd.availableKernelModules              ## Kernel modules for initrd
+│   │   ├── boot.kernelModules                              ## Loaded kernel modules
+│   │   ├── fileSystems."/"                                 ## Root filesystem definition
+│   │   ├── swapDevices                                     ## Swap configuration
+│   │   ├── networking.useDHCP                              ## DHCP client enable
+│   │   ├── nixpkgs.hostPlatform                            ## System architecture
+│   │   └── hardware.cpu.intel.updateMicrocode              ## Intel CPU microcode updates
+│   │
+│   ├── ## Core system configuration
+│   ├── system basics/
+│   │   ├── boot.loader.grub                                ## GRUB bootloader setup
+│   │   ├── networking/
+│   │   │   ├── hostName                                    ## System hostname
+│   │   │   ├── networkmanager                              ## NetworkManager enable
+│   │   │   └── firewall                                    ## Firewall port rules
+│   │   ├── time.timeZone                                   ## System timezone
+│   │   ├── i18n/
+│   │   │   ├── defaultLocale                               ## Default system locale
+│   │   │   └── extraLocaleSettings                         ## Additional locale settings
+│   │   ├── services/
+│   │   │   ├── xserver                                     ## X11 server enable
+│   │   │   ├── displayManager.sddm                         ## SDDM display manager
+│   │   │   ├── desktopManager.plasma6                      ## KDE Plasma 6 desktop
+│   │   │   ├── openssh                                     ## SSH server configuration
+│   │   │   ├── printing                                    ## CUPS printing service
+│   │   │   └── pipewire                                    ## Audio server (replaces PulseAudio)
+│   │   ├── security/
+│   │   │   ├── sudo.wheelNeedsPassword                     ## Sudo password requirement
+│   │   │   └── rtkit                                       ## Realtime kit for audio
+│   │   ├── programs.ssh.startAgent                         ## SSH agent activation
+│   │   ├── users.users.Togo-GT                             ## User account definition
+│   │   └── nix.settings.experimental-features              ## Nix experimental features
+│   │
+│   ├── ## Home Manager user environment
+│   ├── home-manager integration/
+│   │   └── users.Togo-GT/
+│   │       ├── home/
+│   │       │   ├── username                                ## Home Manager username
+│   │       │   ├── homeDirectory                           ## User home directory
+│   │       │   ├── stateVersion                            ## Home Manager state version
+│   │       │   └── packages                                ## User-specific packages
+│   │       ├── programs/
+│   │       │   ├── zsh
+│   │       │   │   ├── shellAliases                        ## Zsh command aliases
+│   │       │   │   └── initContent                         ## Zsh initialization script
+│   │       │   ├── git
+│   │       │   │   ├── userName                            ## Git global username
+│   │       │   │   ├── userEmail                           ## Git global email
+│   │       │   │   ├── extraConfig                         ## Additional git config
+│   │       │   │   └── aliases                             ## Git command aliases
+│   │       │   ├── vscode
+│   │       │   │   ├── package                             ## VS Codium package
+│   │       │   │   └── profiles.default                    ## VS Code settings and extensions
+│   │       │   ├── alacritty                               ## Terminal emulator config
+│   │       │   └── bash.initExtra                          ## Bash initialization extras
+│   │       ├── home files/
+│   │       │   ├── .config/alacritty/alacritty.yml         ## Alacritty terminal config
+│   │       │   └── .tmux.conf                              ## Tmux configuration
+│   │       └── sessionVariables                            ## Environment variables
+│   │
+│   ├── ## Automated system maintenance
+│   ├── systemd services/
+│   │   ├── cleanOldHomeManagerBackups/
+│   │   │   ├── timer                                       ## Backup cleanup schedule
+│   │   │   └── service                                     ## Backup cleanup execution
+│   │   └── nix-garbage-collection/
+│   │       ├── timer                                       ## GC schedule (weekly)
+│   │       └── service                                     ## Garbage collection execution
+│   │
+│   └── system.stateVersion                                 ## System state version
+│
+└── ## Flake output configuration
+    └── nixosConfigurations.nixos-btw                       ## Final system configuration
