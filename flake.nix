@@ -114,7 +114,7 @@
             home.username = "Togo-GT";
             home.homeDirectory = "/home/Togo-GT";
             home.stateVersion = "25.05";
-
+            home.enableNixpkgsReleaseCheck = false;
             home.packages = with pkgs; [
               delta lazygit curl ripgrep fzf fd bat jq
               htop bottom duf ncdu tree neofetch
@@ -257,15 +257,12 @@
           systemd.services.cleanOldHomeManagerBackups = {
             description = "Fjern Home Manager backups ældre end 30 dage";
             serviceConfig.Type = "oneshot";
-            serviceConfig.ExecStart = ''
-              mkdir -p /home/Togo-GT/backups/home-manager
-              find /home/Togo-GT/backups/home-manager -type f -name "*.backup" -mtime +30 -exec rm -v {} \;
-            '';
+            serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p /home/Togo-GT/backups/home-manager && find /home/Togo-GT/backups/home-manager -type f -name \"*.backup\" -mtime +30 -exec rm -v {} \\;'";
             wantedBy = [ "multi-user.target" ];
           };
         }
 
-      ];
+      ];  # ← This closing bracket was missing for the modules list
     };
   };
 }
