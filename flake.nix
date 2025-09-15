@@ -43,10 +43,6 @@
           networking.hostName = "nixos-btw";
           networking.networkmanager.enable = true;
 
-          # ✅ Enable all firmware (fixes missing Wi-Fi drivers)
-          hardware.enableAllFirmware = true;
-          hardware.enableRedistributableFirmware = true;
-
           time.timeZone = "Europe/Copenhagen";
 
           i18n.defaultLocale = "en_DK.UTF-8";
@@ -87,6 +83,9 @@
             alsa.support32Bit = true;
             pulse.enable = true;
           };
+
+          # ✅ Enable ssh-agent as systemd user service
+          services.ssh-agent.enable = true;
 
           users.users.Togo-GT = {
             isNormalUser = true;
@@ -152,11 +151,6 @@
 
                 PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
               '';
-            };
-
-            programs.ssh = {
-              enable = true;
-              startAgent = true;
             };
 
             programs.git = {
@@ -232,13 +226,20 @@
               set -g renumber-windows on
             '';
 
+            # ✅ Ensure SSH_AUTH_SOCK + auto-add key
             home.sessionVariables = {
               LANG = "en_DK.UTF-8";
               LC_ALL = "en_DK.UTF-8";
               PAGER = "less";
               MANPAGER = "less";
               GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
+              SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/ssh-agent";
             };
+
+            programs.bash.initExtra = ''
+              export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent"
+              ssh-add -q ~/.ssh/id_ed25519 2>/dev/null || true
+            '';
           };
         }
 
