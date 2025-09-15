@@ -17,11 +17,13 @@
       modules = [
 
         # ----------------------------
-        # Hardware config (inlined)
+        # Hardware config
         # ----------------------------
         ({ lib, config, ... }: {
           boot.initrd.availableKernelModules = [ "ehci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
           boot.kernelModules = [ "iwlwifi" "kvm-intel" ];
+          hardware.enableRedistributableFirmware = true;
+
           fileSystems."/" = {
             device = "/dev/disk/by-uuid/8f424373-0299-411b-82ba-475f6289a59d";
             fsType = "ext4";
@@ -84,7 +86,6 @@
             pulse.enable = true;
           };
 
-          # ✅ CORRECT: Enable ssh-agent
           programs.ssh.startAgent = true;
 
           users.users.Togo-GT = {
@@ -105,8 +106,7 @@
         # ----------------------------
         # Home Manager integration
         # ----------------------------
-        home-manager.nixosModules.home-manager
-        {
+        home-manager.nixosModules.home-manager {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
 
@@ -115,136 +115,22 @@
             home.homeDirectory = "/home/Togo-GT";
             home.stateVersion = "25.05";
             home.enableNixpkgsReleaseCheck = false;
-            home.packages = with pkgs; [
-              delta lazygit curl ripgrep fzf fd bat jq
-              htop bottom duf ncdu tree neofetch
-              gparted e2fsprogs
-              autojump zsh-autosuggestions zsh-syntax-highlighting
-              zoxide eza tldr nano
-            ];
 
-            programs.zsh = {
-              enable = true;
-              shellAliases = {
-                ll = "ls -la";
-                gs = "git status";
-                co = "git checkout";
-                br = "git branch";
-                cm = "git commit";
-                lg = "git log --oneline --graph --decorate --all";
-                nixup = "cd /home/Togo-GT/nixos-btw && sudo nixos-rebuild switch --upgrade --flake .#nixos-btw && home-manager switch --flake .#Togo-GT";
-              };
-              initContent = ''
-                export EDITOR=nano
-                export VISUAL=nano
+            programs.zsh.enable = true;
 
-                eval "$(zoxide init zsh)"
-                alias ls="eza --icons --group-directories-first"
-                alias l="eza --icons --group-directories-first -l"
-                alias la="eza --icons --group-directories-first -la"
-
-                source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-                source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-                source ${pkgs.autojump}/share/autojump/autojump.zsh
-
-                gacp() { git add . && git commit -m "update" && git pull --rebase && git push; }
-
-                PROMPT='%F{cyan}%n@%m%f %F{yellow}%~%f %# '
-              '';
-            };
-
-            programs.git = {
-              enable = true;
-              userName = "Togo-GT";
-              userEmail = "michael.kaare.nielsen@gmail.com";
-              extraConfig = {
-                url."git@github.com:".insteadOf = "https://github.com/";
-                core.sshCommand = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
-              };
-              aliases = {
-                st = "status";
-                co = "checkout";
-                br = "branch";
-                cm = "commit";
-                lg = "log --oneline --graph --decorate --all";
-              };
-            };
-
-            programs.vscode = {
-              enable = true;
-              package = pkgs.vscodium;
-              profiles.default = {
-                userSettings = {
-                  "editor.fontSize" = 14;
-                  "window.zoomLevel" = 1;
-                  "git.useForcePushWithLease" = true;
-                };
-                extensions = with pkgs.vscode-extensions; [
-                  ms-python.python
-                  eamodio.gitlens
-                  vscodevim.vim
-                  ms-toolsai.jupyter
-                ];
-              };
-            };
-
-            programs.alacritty.enable = true;
-            home.file.".config/alacritty/alacritty.yml".text = ''
-              window:
-                padding: { x: 8, y: 8 }
-                dynamic_title: true
-              font:
-                normal:
-                  family: "Monospace"
-                  size: 12.0
-              scrolling:
-                history: 20000
-                multiplier: 3
-              cursor:
-                style: Block
-                blink = true
-              live_config_reload: true
-              colors:
-                primary:
-                  background: '0x1d1f21'
-                  foreground: '0xc5c8c6'
-                cursor:
-                  text: '0x1d1f21'
-                  cursor: '0xc5c8c6'
-            '';
-
-            home.file.".tmux.conf".text = ''
-              set -g mouse on
-              setw -g mode-keys vi
-              bind r source-file ~/.tmux.conf \; display "Config reloaded!"
-              set -g prefix C-a
-              unbind C-b
-              bind C-a send-prefix
-              set -g status-bg colour234
-              set -g status-fg colour136
-              set -g history-limit 10000
-              set -g renumber-windows on
-            '';
-
-            # ✅ Ensure SSH_AUTH_SOCK + auto-add key
             home.sessionVariables = {
-              LANG = "en_DK.UTF-8";
-              LC_ALL = "en_DK.UTF-8";
-              PAGER = "less";
-              MANPAGER = "less";
-              GIT_SSH_COMMAND = "ssh -i /home/Togo-GT/.ssh/id_ed25519";
               SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/ssh-agent";
             };
-
-            programs.bash.initExtra = ''
-              export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent"
-              ssh-add -q ~/.ssh/id_ed25519 2>/dev/null || true
-            '';
           };
         }
 
         # ----------------------------
-        # Systemd timer/service for Home Manager backup cleanup
+        # Auto Wi-Fi module
+        # ----------------------------
+        (import ./modules/autoWifi.nix)
+
+        # ----------------------------
+        # Systemd timers/services
         # ----------------------------
         {
           systemd.timers.cleanOldHomeManagerBackups = {
@@ -260,18 +146,13 @@
             serviceConfig.ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p /home/Togo-GT/backups/home-manager && find /home/Togo-GT/backups/home-manager -type f -name \"*.backup\" -mtime +30 -exec rm -v {} \\;'";
             wantedBy = [ "multi-user.target" ];
           };
-        }
 
-        # ----------------------------
-        # Systemd timer/service for automatic garbage collection
-        # ----------------------------
-        {
           systemd.timers.nix-garbage-collection = {
             description = "Automatic Nix garbage collection";
             timerConfig = {
-              OnCalendar = "weekly";  # Runs once per week
+              OnCalendar = "weekly";
               Persistent = true;
-              RandomizedDelaySec = "1h";  # Random delay to avoid system load spikes
+              RandomizedDelaySec = "1h";
             };
             wantedBy = [ "timers.target" ];
           };
@@ -281,7 +162,7 @@
             serviceConfig = {
               Type = "oneshot";
               ExecStart = "${pkgs.nix}/bin/nix-collect-garbage -d";
-              User = "root";  # This service needs root privileges
+              User = "root";
             };
             wantedBy = [ "multi-user.target" ];
           };
