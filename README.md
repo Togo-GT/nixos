@@ -62,5 +62,5 @@ home-manager switch --flake /home/Togo-GT/nixos-btw#Togo-GT
 # Use Git add → commit → pull → push
 gacp "My commit message"
 gacp  # defaults to "update"
-
+ 
 
