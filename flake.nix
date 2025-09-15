@@ -43,6 +43,10 @@
           networking.hostName = "nixos-btw";
           networking.networkmanager.enable = true;
 
+          # ✅ Enable all firmware (fixes missing Wi-Fi drivers)
+          hardware.enableAllFirmware = true;
+          hardware.enableRedistributableFirmware = true;
+
           time.timeZone = "Europe/Copenhagen";
 
           i18n.defaultLocale = "en_DK.UTF-8";
@@ -106,11 +110,6 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-
-          # ❌ FJERNET: Forældet backup-konfiguration
-          # home-manager.backup.enable = true;
-          # home-manager.backup.path = "/home/Togo-GT/backups/home-manager";
-          # home-manager.backup.fileExtension = "backup";
 
           home-manager.users.Togo-GT = { pkgs, lib, ... }: {
             home.username = "Togo-GT";
